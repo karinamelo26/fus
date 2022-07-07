@@ -5,3 +5,4 @@
 - React
 - Electron
 - NodeJS
+- Vite
