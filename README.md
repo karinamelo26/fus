@@ -1,4 +1,4 @@
-# fus
+# FUS - File Update System
 
 # Stack
 
