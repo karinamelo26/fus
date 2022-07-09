@@ -2,6 +2,7 @@ import { rmSync } from 'fs';
 import { join } from 'path';
 
 import react from '@vitejs/plugin-react';
+import swc from 'rollup-plugin-swc';
 import { defineConfig } from 'vite';
 import electron from 'vite-plugin-electron';
 
@@ -21,9 +22,26 @@ export default defineConfig({
         entry: 'electron/main/index.ts',
         vite: {
           build: {
-            sourcemap: false,
+            sourcemap: true,
             outDir: 'dist/electron/main',
           },
+          esbuild: false,
+          plugins: [
+            swc({
+              sourceMaps: true,
+              jsc: {
+                parser: {
+                  syntax: 'typescript',
+                  dynamicImport: true,
+                  decorators: true,
+                },
+                target: 'es2022',
+                transform: {
+                  decoratorMetadata: true,
+                },
+              },
+            }),
+          ],
         },
       },
       preload: {

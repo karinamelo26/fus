@@ -1,3 +1,5 @@
+import { contextBridge, ipcRenderer } from 'electron';
+
 function domReady(condition: DocumentReadyState[] = ['complete', 'interactive']): Promise<boolean> {
   return new Promise(resolve => {
     if (condition.includes(document.readyState)) {
@@ -90,3 +92,7 @@ window.onmessage = ev => {
 };
 
 setTimeout(removeLoading, 4999);
+
+contextBridge.exposeInMainWorld('api', {
+  test: (args: unknown[]) => ipcRenderer.invoke('teste', args),
+});

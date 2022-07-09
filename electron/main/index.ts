@@ -1,7 +1,11 @@
+import 'reflect-metadata';
 import { release } from 'os';
 import { join } from 'path';
 
 import { app, BrowserWindow, shell, ipcMain } from 'electron';
+
+import { AppModule } from './app.module';
+import { bootstrap } from './bootstrap';
 
 // Disable GPU Acceleration for Windows 7
 if (release().startsWith('6.1')) {
@@ -39,7 +43,7 @@ async function createWindow(): Promise<void> {
     webPreferences: {
       preload,
       nodeIntegration: true,
-      contextIsolation: false,
+      contextIsolation: true,
       devTools: !app.isPackaged,
     },
   });
@@ -48,6 +52,7 @@ async function createWindow(): Promise<void> {
     await win.loadFile(indexHtml);
   } else {
     await win.loadURL(url);
+    win.webContents.openDevTools();
   }
 
   // Test actively push message to the Electron-Renderer
@@ -62,6 +67,8 @@ async function createWindow(): Promise<void> {
     }
     return { action: 'deny' };
   });
+
+  await bootstrap(AppModule);
 }
 
 app.whenReady().then(createWindow);

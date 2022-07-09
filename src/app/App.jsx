@@ -4,13 +4,18 @@ import styles from '@styles/app.module.scss';
 export const App = () => {
   const [count, setCount] = useState(0);
 
+  function set() {
+    setCount(_count => _count + 1);
+    window.api.test([{ args: 1 }]).then(console.log);
+  }
+
   return (
     <div className={styles.app}>
       <header className={styles.appHeader}>
         <div className={styles.logos}></div>
         <p>Hello Electron + Vite + React!</p>
         <p>
-          <button onClick={() => setCount(_count => _count + 1)}>count is: {count}</button>
+          <button onClick={set}>count is: {count}</button>
         </p>
         <p>
           Edit <code>App.tsx</code> and save to test HMR updates.
