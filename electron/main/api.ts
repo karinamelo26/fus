@@ -1,10 +1,18 @@
+import { plainToInstance } from 'class-transformer';
+import { validate } from 'class-validator';
 import { ipcMain, IpcMainInvokeEvent } from 'electron';
+import { isNil, isObject } from 'st-utils';
 import { Class } from 'type-fest';
 
 import { Controller, ControllerMetadata, MethodMetadata } from './api/controller';
 import { Module, ModuleOptions } from './api/module';
 import { injector as injectorInstance, Injector } from './di/injector';
 import { ClassProvider, isProvider } from './di/provider';
+
+interface ParameterResolved {
+  error?: any;
+  data: any;
+}
 
 export class Api {
   private constructor(private readonly moduleMetadata: ModuleOptions, private readonly injector: Injector) {}
@@ -15,9 +23,31 @@ export class Api {
     instance: any,
     methodMetadata: MethodMetadata
   ): (event: IpcMainInvokeEvent, ...args: any[]) => Promise<void> | any {
-    return async (_, arg) => {
-      // TODO transform and validate the arg according to the Data param
-      return await instance[methodMetadata.propertyKey](arg);
+    return async (_, ...args: unknown[]) => {
+      const parametersPromises: Promise<ParameterResolved>[] = args.map(async (arg, index) => {
+        const metadata = methodMetadata.parameters.get(index);
+        if (!metadata) {
+          return { data: arg };
+        }
+        if (isNil(arg) && !metadata.optional) {
+          // TODO add class for "http" error
+          return { data: null, error: new Error('Has error') };
+        }
+        if (!isObject(arg) || !metadata.type) {
+          return { data: arg };
+        }
+        const paramInstance: object | any[] = plainToInstance(metadata.type, arg);
+        await validate(paramInstance, { whitelist: true });
+        return { data: paramInstance };
+      });
+      const parameters = await Promise.all(parametersPromises);
+      const errors = parameters.filter(parameter => parameter.error);
+      if (errors.length) {
+        // TODO add class for generic error
+        throw new Error('Has errors');
+      }
+      const data = parameters.map(parameter => parameter.data);
+      return await instance[methodMetadata.propertyKey](...data);
     };
   }
 
@@ -27,6 +57,7 @@ export class Api {
       const path = `${controllerMetadata.path}/${methodMetadata.path}`;
       this._paths.push(path);
       ipcMain.handle(path, this._createHandler(instance, methodMetadata));
+      console.log(`[${path}] Initialized`);
     }
   }
 
