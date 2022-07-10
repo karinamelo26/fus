@@ -6,7 +6,7 @@ export const App = () => {
 
   function set() {
     setCount(_count => _count + 1);
-    window.api.test([{ args: 1 }]).then(console.log);
+    window.api['scheduler/get-all']().then(console.log);
   }
 
   return (

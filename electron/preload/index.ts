@@ -88,11 +88,14 @@ const { appendLoading, removeLoading } = useLoading();
 domReady().then(appendLoading);
 
 window.onmessage = ev => {
-  ev.data.payload === 'removeLoading' && removeLoading();
+  if (ev.data.payload === 'removeLoading') {
+    removeLoading();
+  }
 };
 
 setTimeout(removeLoading, 4999);
 
-contextBridge.exposeInMainWorld('api', {
-  test: (args: unknown[]) => ipcRenderer.invoke('teste', args),
+ipcRenderer.on('init', (_, paths: string[]) => {
+  const api = paths.reduce((acc, path) => ({ ...acc, [path]: (arg: unknown) => ipcRenderer.invoke(path, arg) }), {});
+  contextBridge.exposeInMainWorld('api', api);
 });

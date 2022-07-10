@@ -4,7 +4,7 @@ import { join } from 'path';
 
 import { app, BrowserWindow, shell, ipcMain } from 'electron';
 
-import { AppModule } from './app.module';
+import { ApiModule } from './api.module';
 import { bootstrap } from './bootstrap';
 
 // Disable GPU Acceleration for Windows 7
@@ -68,7 +68,8 @@ async function createWindow(): Promise<void> {
     return { action: 'deny' };
   });
 
-  await bootstrap(AppModule);
+  const api = await bootstrap(ApiModule);
+  win.webContents.send('init', api.getPaths());
 }
 
 app.whenReady().then(createWindow);

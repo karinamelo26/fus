@@ -1,11 +1,11 @@
 import { Class } from 'type-fest';
 
+import { ClassProvider, FactoryProvider, isProvider, Provider, ValueProvider } from '../di/provider';
 import { isClass } from '../util/util';
-
-import { ClassProvider, FactoryProvider, isProvider, Provider, ValueProvider } from './provider';
 
 export interface ModuleOptions {
   providers?: Array<Class<any> | Provider>;
+  controllers?: Array<Class<any>>;
 }
 
 interface Module {
@@ -22,8 +22,11 @@ const setMetadata: Module['setMetadata'] = (target, options) => {
 const getMetadata: Module['getMetadata'] = target => metadataStore.get(target) ?? null;
 
 function resolveProvider(possibleProvider: Provider | Class<any>): Provider | Class<any> {
-  if (isProvider(possibleProvider) || isClass(possibleProvider)) {
+  if (isProvider(possibleProvider)) {
     return possibleProvider;
+  }
+  if (isClass(possibleProvider)) {
+    return new ClassProvider(possibleProvider, possibleProvider);
   }
   const providerObject: Partial<ValueProvider & ClassProvider & FactoryProvider> = possibleProvider;
   if (providerObject.useValue) {
