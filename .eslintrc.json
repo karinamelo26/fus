@@ -35,6 +35,14 @@
     "eqeqeq": ["error", "always", { "null": "ignore" }],
     "no-shadow": "error"
   },
+  "env": {
+    "es6": true,
+    "browser": true
+  },
+  "parserOptions": {
+    "ecmaVersion": 2022,
+    "sourceType": "module"
+  },
   "overrides": [
     {
       "files": ["**/*.jsx"],

@@ -1,5 +1,8 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
+import { InternalServerErrorException } from '../main/api/exception';
+import { Response } from '../main/api/response';
+
 function domReady(condition: DocumentReadyState[] = ['complete', 'interactive']): Promise<boolean> {
   return new Promise(resolve => {
     if (condition.includes(document.readyState)) {
@@ -96,6 +99,20 @@ window.onmessage = ev => {
 setTimeout(removeLoading, 4999);
 
 ipcRenderer.on('init', (_, paths: string[]) => {
-  const api = paths.reduce((acc, path) => ({ ...acc, [path]: (arg: unknown) => ipcRenderer.invoke(path, arg) }), {});
+  const api = paths.reduce(
+    (acc, path) => ({
+      ...acc,
+      [path]: async (...args: unknown[]) => {
+        let result: Response;
+        try {
+          result = await ipcRenderer.invoke(path, ...args);
+        } catch (error) {
+          result = new InternalServerErrorException(error?.message ?? error?.error ?? 'Unknown error');
+        }
+        return JSON.parse(JSON.stringify(result));
+      },
+    }),
+    {}
+  );
   contextBridge.exposeInMainWorld('api', api);
 });

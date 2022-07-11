@@ -15,7 +15,8 @@
     "emitDecoratorMetadata": true,
     "importHelpers": true,
     "noImplicitAny": true,
-    "noImplicitOverride": true
+    "noImplicitOverride": true,
+    "useUnknownInCatchVariables": false
   },
   "include": ["vite.config.ts", "package.json", "electron"]
 }

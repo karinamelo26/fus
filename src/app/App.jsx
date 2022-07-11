@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import styles from '@styles/app.module.scss';
+import { api } from './api';
 
 export const App = () => {
   const [count, setCount] = useState(0);
 
   function set() {
     setCount(_count => _count + 1);
-    window.api['scheduler/get-all']().then(console.log);
+    api('scheduler/get-all', { id: 1 }).then(console.log).catch(console.error);
   }
 
   return (

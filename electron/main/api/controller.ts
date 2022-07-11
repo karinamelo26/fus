@@ -1,13 +1,17 @@
+import { StatusCodes } from 'http-status-codes';
+
 export interface ParameterMetadata {
   index: number;
   type: any;
   optional: boolean;
+  isArray: boolean;
 }
 
 export interface MethodMetadata {
   propertyKey: string;
   path: string;
-  parameters: Map<number, ParameterMetadata>;
+  parameters: Array<ParameterMetadata | undefined>;
+  code: StatusCodes;
 }
 
 export interface ControllerMetadata {
@@ -31,7 +35,12 @@ const upsertMetadata: Controller['upsertMetadata'] = (target, update) => {
 };
 const upsertMethodMetadata: Controller['upsertMethodMetadata'] = (target, propertyKey, update) => {
   upsertMetadata(target, metadata => {
-    const method = metadata.methods.get(propertyKey) ?? { propertyKey, path: '', parameters: new Map() };
+    const method = metadata.methods.get(propertyKey) ?? {
+      propertyKey,
+      path: '',
+      parameters: [],
+      code: StatusCodes.OK,
+    };
     metadata.methods.set(propertyKey, update(method));
     return metadata;
   });
