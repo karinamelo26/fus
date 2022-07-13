@@ -5,10 +5,10 @@ import react from '@vitejs/plugin-react';
 import swc from 'rollup-plugin-swc';
 import { defineConfig } from 'vite';
 import electron from 'vite-plugin-electron';
+import esbuildPluginTsc from 'esbuild-plugin-tsc';
 
 rmSync(join(__dirname, 'dist'), { recursive: true, force: true }); // v14.14.0
 
-// https://vitejs.dev/config/
 export default defineConfig({
   resolve: {
     alias: {
@@ -25,25 +25,30 @@ export default defineConfig({
             sourcemap: true,
             outDir: 'dist/electron/main',
           },
-          esbuild: false,
-          plugins: [
-            swc({
-              sourceMaps: true,
-              jsc: {
-                parser: {
-                  syntax: 'typescript',
-                  dynamicImport: true,
-                  decorators: true,
-                },
-                target: 'es2022',
-                transform: {
-                  decoratorMetadata: true,
-                },
-                keepClassNames: true,
-                externalHelpers: true,
-              },
-            }),
-          ],
+          optimizeDeps: {
+            esbuildOptions: {
+              plugins: [esbuildPluginTsc()],
+            },
+          },
+          // esbuild: false,
+          // plugins: [
+          //   swc({
+          //     sourceMaps: true,
+          //     jsc: {
+          //       parser: {
+          //         syntax: 'typescript',
+          //         dynamicImport: true,
+          //         decorators: true,
+          //       },
+          //       target: 'es2022',
+          //       transform: {
+          //         decoratorMetadata: true,
+          //       },
+          //       keepClassNames: true,
+          //       externalHelpers: true,
+          //     },
+          //   }),
+          // ],
         },
       },
       preload: {
