@@ -18,6 +18,8 @@
   "devDependencies": {
     "@rollup/plugin-typescript": "~8.3.3",
     "@swc/core": "~1.2.211",
+    "@swc/helpers": "^0.4.3",
+    "@types/better-sqlite3": "^7.5.0",
     "@types/node": "~18.0.3",
     "@types/react": "~18.0.15",
     "@types/react-dom": "~18.0.6",
@@ -40,7 +42,7 @@
     "reflect-metadata": "~0.1.13",
     "rollup-plugin-swc": "~0.2.1",
     "sass": "~1.53.0",
-    "st-utils": "~2.5.1",
+    "st-utils": "~2.6.0",
     "tslib": "~2.4.0",
     "type-fest": "~2.16.0",
     "typeorm": "~0.3.7",

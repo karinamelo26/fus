@@ -39,6 +39,8 @@ export default defineConfig({
                 transform: {
                   decoratorMetadata: true,
                 },
+                keepClassNames: true,
+                externalHelpers: true,
               },
             }),
           ],
