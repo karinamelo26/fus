@@ -98,7 +98,7 @@ window.onmessage = ev => {
 
 setTimeout(removeLoading, 4999);
 
-ipcRenderer.on('init', (_, paths: string[]) => {
+ipcRenderer.on('init-api', (_, paths: string[]) => {
   const api = paths.reduce(
     (acc, path) => ({
       ...acc,

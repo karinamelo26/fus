@@ -9,7 +9,8 @@ import { AnyObject } from '../util/any-object.type';
 
 import { Controller, ControllerMetadata, MethodMetadata } from './controller';
 import { BadRequestException, Exception, InternalServerErrorException } from './exception';
-import { Module, ModuleOptions } from './module';
+import { Module, ModuleOptions, resolveProvider } from './module';
+import { ModuleWithProviders } from './module-with-providers';
 import { Response } from './response';
 import { validateData } from './validate-data';
 
@@ -18,17 +19,58 @@ interface ParameterResolved {
   data: any;
 }
 
+type ModuleWithoutImports = Required<Omit<ModuleOptions, 'imports'>>;
+
 export class Api {
   private constructor(private readonly moduleMetadata: ModuleOptions, private readonly injector: Injector) {}
 
   private readonly _paths: string[] = [];
+  private readonly _moduleSet = new Map<any, ModuleWithoutImports>();
+
+  private _getAllOptionsFromModule(module: Class<any> | ModuleWithProviders): ModuleWithoutImports {
+    if (this._moduleSet.has(module)) {
+      return this._moduleSet.get(module)!;
+    }
+    const isModuleWithProviders = module instanceof ModuleWithProviders;
+    const moduleClass = isModuleWithProviders ? module.module : module;
+    const moduleMetadata = Module.getMetadata(moduleClass);
+    if (!moduleMetadata) {
+      return this._moduleSet.set(module, { providers: [], controllers: [] }).get(module)!;
+    }
+    const moduleWithProvidersProviders = isModuleWithProviders ? module.providers : [];
+    const moduleOptionsChildren = this._getAllOptionsFromModules(moduleMetadata.imports ?? []);
+    const providers = [
+      ...(moduleMetadata.providers ?? []),
+      ...(moduleWithProvidersProviders ?? []).map(resolveProvider),
+      ...moduleOptionsChildren.providers,
+    ];
+    const controllers = [...(moduleMetadata.controllers ?? []), ...moduleOptionsChildren.controllers];
+    return this._moduleSet.set(module, { providers, controllers }).get(module)!;
+  }
+
+  private _getAllOptionsFromModules(modules: Array<Class<any> | ModuleWithProviders>): ModuleWithoutImports {
+    return modules.reduce(
+      (options, module) => {
+        const moduleOptions = this._getAllOptionsFromModule(module);
+        return {
+          providers: [...options.providers, ...moduleOptions.providers],
+          controllers: [...options.controllers, ...moduleOptions.controllers],
+        };
+      },
+      { providers: [], controllers: [] } as ModuleWithoutImports
+    );
+  }
+
+  private _getChildrenModuleOptions(): ModuleWithoutImports {
+    return this._getAllOptionsFromModules(this.moduleMetadata.imports ?? []);
+  }
 
   private _createHandler(
     instance: any,
     methodMetadata: MethodMetadata
-  ): (event: IpcMainInvokeEvent, ...args: any[]) => Promise<void> | any {
+  ): (event: IpcMainInvokeEvent, ...args: unknown[]) => Promise<void> | any {
     return async (_, ...args: unknown[]) => {
-      async function handle(): Promise<Response> {
+      try {
         const parametersPromises: Promise<ParameterResolved>[] = methodMetadata.parameters.map(
           async (metadata, index) => {
             const arg = args[index];
@@ -55,23 +97,16 @@ export class Api {
           const errorsFormatted = errors
             .reduce((acc, item) => [...acc, ...(item.errors ?? [])], [] as string[])
             .join(', ');
-          throw new BadRequestException(errorsFormatted);
+          return new BadRequestException(errorsFormatted);
         }
         const argsFormatted = parameters.map(parameter => parameter.data);
         const data = await instance[methodMetadata.propertyKey](...argsFormatted);
         return new Response({ data, success: true, statusCode: methodMetadata.code });
-      }
-      let result: Response;
-      try {
-        result = await handle();
       } catch (error) {
-        if (error instanceof Exception) {
-          result = error;
-        } else {
-          result = new InternalServerErrorException(error?.message ?? error?.error ?? 'Unknown error');
-        }
+        return error instanceof Exception
+          ? error
+          : new InternalServerErrorException(error?.message ?? error?.error ?? 'Unknown error');
       }
-      return result;
     };
   }
 
@@ -102,8 +137,9 @@ export class Api {
   }
 
   async init(): Promise<this> {
-    const providers = (this.moduleMetadata.providers ?? []).filter(isProvider);
-    const controllers = this.moduleMetadata.controllers ?? [];
+    const childrenModules = this._getChildrenModuleOptions();
+    const providers = [...(this.moduleMetadata.providers ?? []), ...childrenModules.providers].filter(isProvider);
+    const controllers = [...(this.moduleMetadata.controllers ?? []), ...childrenModules.controllers];
     const controllersProviders = controllers.map(controller => new ClassProvider(controller, controller));
     this.injector.addProviders([...providers, ...controllersProviders]);
     await this.injector.resolveAll();

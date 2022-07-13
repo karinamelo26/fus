@@ -17,7 +17,6 @@ export class Injector {
   }
 
   private readonly _providers = new Map<any, Provider>();
-  private readonly _futureInstances = new Map<any, Promise<any>>();
   private readonly _instances = new Map<any, any>();
 
   private _resolveValueProvider<T>(provider: ValueProvider): T {
@@ -66,9 +65,6 @@ export class Injector {
   async resolve<T>(target: any): Promise<T> {
     if (this._instances.has(target)) {
       return this._instances.get(target)!;
-    }
-    if (this._futureInstances.has(target)) {
-      return await this._futureInstances.get(target)!;
     }
     const provider = this._providers.get(target);
     if (!provider) {

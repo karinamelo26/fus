@@ -47,6 +47,7 @@ async function createWindow(): Promise<void> {
       devTools: !app.isPackaged,
     },
   });
+  win.maximize();
 
   if (app.isPackaged) {
     await win.loadFile(indexHtml);
@@ -69,7 +70,7 @@ async function createWindow(): Promise<void> {
   });
 
   const api = await bootstrap(ApiModule);
-  win.webContents.send('init', api.getPaths());
+  win.webContents.send('init-api', api.getPaths());
 }
 
 app.whenReady().then(createWindow);

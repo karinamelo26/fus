@@ -5,9 +5,11 @@ import { api } from './api';
 export const App = () => {
   const [count, setCount] = useState(0);
 
-  function set() {
+  async function set() {
     setCount(_count => _count + 1);
-    api('scheduler/get-all', { id: 1 }).then(console.log).catch(console.error);
+    console.time('api-call');
+    await api('scheduler/get-all', { id: 1 }).then(console.log).catch(console.error);
+    console.timeEnd('api-call');
   }
 
   return (
