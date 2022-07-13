@@ -31,6 +31,19 @@ export class Api {
     if (this._moduleSet.has(module)) {
       return this._moduleSet.get(module)!;
     }
+    // TODO Also check if module is not an plain object, because that will throw an error
+    // Maybe do something like this: 
+    /**
+     * if (isPlainObject(module)) {
+     *   if (module.module) {
+     *     module = new ModuleWithProviders(module.modules, module.providers ?? [])
+     *   } else {
+     *     throw new Error('is not a module or module with providers');
+     *     or
+     *     console.warn('is not a module or module with providers');
+     *   }
+     * }
+     */ 
     const isModuleWithProviders = module instanceof ModuleWithProviders;
     const moduleClass = isModuleWithProviders ? module.module : module;
     const moduleMetadata = Module.getMetadata(moduleClass);

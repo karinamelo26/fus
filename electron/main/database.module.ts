@@ -1,5 +1,6 @@
 import { Class } from 'type-fest';
 import { DataSource, DataSourceOptions, Repository } from 'typeorm';
+// TODO check this imports
 import { EntityTarget } from 'typeorm/common/EntityTarget';
 import { EntityManager } from 'typeorm/entity-manager/EntityManager';
 import { QueryRunner } from 'typeorm/query-runner/QueryRunner';
@@ -9,12 +10,13 @@ import { ModuleWithProviders } from './api/module-with-providers';
 import { EntityRepository } from './di/entity-repository';
 
 type DatabaseModuleOptions = DataSourceOptions & {
-  repositories: Class<Repository<any>, [EntityTarget<any>, EntityManager, QueryRunner?]>[];
+  repositories?: Class<Repository<any>, [EntityTarget<any>, EntityManager, QueryRunner?]>[];
   autoLoadEntities?: boolean;
 };
 
 @Module({})
 export class DatabaseModule {
+  // TODO add forChild method
   static forRoot(options: DatabaseModuleOptions): ModuleWithProviders {
     return new ModuleWithProviders(DatabaseModule, [
       {
@@ -28,7 +30,7 @@ export class DatabaseModule {
           return new DataSource(newOptions).initialize();
         },
       },
-      ...options.repositories.map(repository => ({
+      ...(options.repositories ?? []).map(repository => ({
         provide: repository,
         useFactory: (dataSource: DataSource) => {
           const entity = EntityRepository.getMetadata(repository);
