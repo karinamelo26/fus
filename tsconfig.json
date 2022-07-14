@@ -7,7 +7,7 @@
     "esModuleInterop": false,
     "strict": true,
     "composite": true,
-    "module": "ESNext",
+    "module": "CommonJS",
     "moduleResolution": "Node",
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
@@ -16,7 +16,10 @@
     "importHelpers": true,
     "noImplicitAny": true,
     "noImplicitOverride": true,
-    "useUnknownInCatchVariables": false
+    "useUnknownInCatchVariables": false,
+    "outDir": "dist",
+    "sourceMap": true,
+    "declaration": false
   },
-  "include": ["vite.config.ts", "package.json", "electron"]
+  "include": ["vite.config.ts", "package.json", "electron", "scripts"]
 }

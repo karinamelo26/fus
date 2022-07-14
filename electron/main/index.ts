@@ -44,7 +44,6 @@ async function createWindow(): Promise<void> {
       preload,
       nodeIntegration: true,
       contextIsolation: true,
-      devTools: !app.isPackaged,
     },
   });
   win.maximize();
