@@ -25,7 +25,6 @@ export default defineConfig(async () => {
         include: ['src/**/*.jsx'],
       }),
       await electron(),
-      // viteElectron(),
     ],
   };
 });

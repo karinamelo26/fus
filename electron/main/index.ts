@@ -22,6 +22,10 @@ if (!app.requestSingleInstanceLock()) {
   process.exit(0);
 }
 
+// TODO remove all use of __dirname
+// TODO fix paths with public (no longer exists)
+// TODO find a way to reload the preload script when the front-end is changed
+
 export const ROOT_PATH = {
   // /dist
   dist: join(__dirname, '../..'),

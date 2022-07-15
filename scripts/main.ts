@@ -78,6 +78,7 @@ function serve(): PluginOption {
   const watch = new TscWatchClient();
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const electronPath = require('electron') as unknown as string;
+  let electronApp: ChildProcess | undefined;
   return {
     name: 'vite-plugin-electron-main-serve',
     apply: 'serve',
@@ -85,13 +86,15 @@ function serve(): PluginOption {
       server.httpServer?.on('listening', async () => {
         console.log('starting server');
         watch.on('success', async () => {
-          process.electronApp?.removeAllListeners();
-          process.electronApp?.kill(0);
+          if (electronApp) {
+            electronApp.removeAllListeners();
+            electronApp.kill();
+          }
           console.log('Building files with esbuild');
           await esbuild(getEsbuildConfig(false, 'dist/temp/electron/main/index.js'));
           server.ws.send({ type: 'full-reload' });
-          process.electronApp = spawn(electronPath, ['.'], { stdio: 'inherit' });
-          process.electronApp.on('error', () => {
+          electronApp = spawn(electronPath, ['.'], { stdio: 'inherit' });
+          electronApp.on('error', () => {
             console.log({ hasError: 'error' });
             watch.kill();
             process.exit(1);
