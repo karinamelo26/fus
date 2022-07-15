@@ -22,8 +22,6 @@ if (!app.requestSingleInstanceLock()) {
   process.exit(0);
 }
 
-// TODO find a way to reload the preload script when the front-end is changed
-
 const DIST_PATH = app.isPackaged ? join(process.resourcesPath, 'app.asar', 'dist') : join(process.cwd(), 'dist');
 
 let win: BrowserWindow | null = null;

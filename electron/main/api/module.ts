@@ -24,8 +24,7 @@ const setMetadata: Module['setMetadata'] = (target, options) => {
 };
 const getMetadata: Module['getMetadata'] = target => metadataStore.get(target) ?? null;
 
-// TODO return type here is wrong, this function always returns a Provider
-export function resolveProvider(possibleProvider: Provider | Class<any>): Provider | Class<any> {
+export function resolveProvider(possibleProvider: Provider | Class<any>): Provider {
   if (isProvider(possibleProvider)) {
     return possibleProvider;
   }

@@ -26,5 +26,3 @@ export const EntityRepository: EntityRepository = Object.assign(EntityRepository
   getMetadata,
   getAll,
 });
-
-// TODO add InjectRepository decorator

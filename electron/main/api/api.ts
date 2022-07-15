@@ -1,11 +1,12 @@
 import { plainToInstance } from 'class-transformer';
 import { ipcMain, IpcMainInvokeEvent } from 'electron';
-import { isArray, isNil, isObject } from 'st-utils';
+import { isArray, isNil, isObject, isPlainObject } from 'st-utils';
 import { Class } from 'type-fest';
 
 import { injector as injectorInstance, Injector } from '../di/injector';
 import { ClassProvider, isProvider } from '../di/provider';
 import { AnyObject } from '../util/any-object.type';
+import { isClass } from '../util/util';
 
 import { Controller, ControllerMetadata, MethodMetadata } from './controller';
 import { BadRequestException, Exception, InternalServerErrorException } from './exception';
@@ -31,26 +32,25 @@ export class Api {
     if (this._moduleSet.has(module)) {
       return this._moduleSet.get(module)!;
     }
-    // TODO Also check if module is not an plain object, because that will throw an error
-    // Maybe do something like this: 
-    /**
-     * if (isPlainObject(module)) {
-     *   if (module.module) {
-     *     module = new ModuleWithProviders(module.modules, module.providers ?? [])
-     *   } else {
-     *     throw new Error('is not a module or module with providers');
-     *     or
-     *     console.warn('is not a module or module with providers');
-     *   }
-     * }
-     */ 
-    const isModuleWithProviders = module instanceof ModuleWithProviders;
-    const moduleClass = isModuleWithProviders ? module.module : module;
+    if (!isClass(module) && isPlainObject(module)) {
+      // typescript thinks this is a ModuleWithProviders instance, but it could be a plain object also
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+      if (module.module) {
+        module = new ModuleWithProviders(module.module, module.providers ?? []);
+      } else {
+        throw new Error(
+          `${JSON.stringify(
+            module
+          )} is not a Class nor a ModuleWithProviders. Remember to return a instance of ModuleWithProviders on static methods os Modules`
+        );
+      }
+    }
+    const moduleClass = module instanceof ModuleWithProviders ? module.module : module;
     const moduleMetadata = Module.getMetadata(moduleClass);
     if (!moduleMetadata) {
       return this._moduleSet.set(module, { providers: [], controllers: [] }).get(module)!;
     }
-    const moduleWithProvidersProviders = isModuleWithProviders ? module.providers : [];
+    const moduleWithProvidersProviders = module instanceof ModuleWithProviders ? module.providers : [];
     const moduleOptionsChildren = this._getAllOptionsFromModules(moduleMetadata.imports ?? []);
     const providers = [
       ...(moduleMetadata.providers ?? []),
