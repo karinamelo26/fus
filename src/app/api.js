@@ -17,6 +17,14 @@ export async function api(path, ...data) {
    * @type {Response}
    */
   let result;
+  if (!window.api) {
+    throw {
+      success: false,
+      statusCode: 500,
+      message: 'API is not available. Build is broken!',
+      data: null,
+    };
+  }
   const method = window.api[path];
   if (!method) {
     result = {

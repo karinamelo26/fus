@@ -22,28 +22,21 @@ if (!app.requestSingleInstanceLock()) {
   process.exit(0);
 }
 
-// TODO remove all use of __dirname
-// TODO fix paths with public (no longer exists)
 // TODO find a way to reload the preload script when the front-end is changed
 
-export const ROOT_PATH = {
-  // /dist
-  dist: join(__dirname, '../..'),
-  // /dist or /public
-  public: join(__dirname, app.isPackaged ? '../..' : '../../../public'),
-};
+const DIST_PATH = join(process.cwd(), 'dist');
 
 let win: BrowserWindow | null = null;
 // Here, you can also use other preload
-const preload = join(__dirname, '../preload/index.js');
+const preload = join(DIST_PATH, 'electron', 'preload', 'index.js');
 // 🚧 Use ['ENV_NAME'] avoid vite:define plugin
 const url = `http://localhost:3000`;
-const indexHtml = join(ROOT_PATH.dist, 'index.html');
+const indexHtml = join(DIST_PATH, 'index.html');
 
 async function createWindow(): Promise<void> {
   win = new BrowserWindow({
     title: 'Main window',
-    icon: join(ROOT_PATH.public, 'favicon.svg'),
+    icon: join(DIST_PATH, 'favicon.svg'),
     webPreferences: {
       preload,
       nodeIntegration: true,

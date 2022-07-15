@@ -11,18 +11,21 @@ async function electron(): Promise<PluginOption[]> {
   return [preload(), main()];
 }
 
+const SRC_PATH = join(process.cwd(), 'src');
+
 export default defineConfig(async () => {
   await deleteDist();
   return {
     clearScreen: false,
     resolve: {
       alias: {
-        '@styles': join(__dirname, 'src/styles'),
+        '@styles': join(SRC_PATH, 'styles'),
       },
     },
     plugins: [
       react({
         include: ['src/**/*.jsx'],
+        fastRefresh: false,
       }),
       await electron(),
     ],
