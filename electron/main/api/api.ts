@@ -33,8 +33,10 @@ export class Api {
       return this._moduleSet.get(module)!;
     }
     if (!isClass(module) && isPlainObject(module)) {
-      // typescript thinks this is a ModuleWithProviders instance, but it could be a plain object also
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+      /* eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+         --
+         typescript thinks this is a ModuleWithProviders instance, but it could be a plain object also
+      */
       if (module.module) {
         module = new ModuleWithProviders(module.module, module.providers ?? []);
       } else {
