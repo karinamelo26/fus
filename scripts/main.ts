@@ -66,14 +66,6 @@ function build(): PluginOption {
   };
 }
 
-declare global {
-  namespace NodeJS {
-    interface Process {
-      electronApp?: ChildProcess;
-    }
-  }
-}
-
 function serve(): PluginOption {
   const watch = new TscWatchClient();
   // eslint-disable-next-line @typescript-eslint/no-var-requires

@@ -52,9 +52,13 @@ async function createWindow(): Promise<void> {
     win.webContents.openDevTools();
   }
 
+  const api = await bootstrap(ApiModule);
+  win.webContents.send('init-api', api.getPaths());
+
   // Test actively push message to the Electron-Renderer
   win.webContents.on('did-finish-load', () => {
     win?.webContents.send('main-process-message', new Date().toLocaleString());
+    win?.webContents.send('init-api', api.getPaths());
   });
 
   // Make all links open with the browser, not with the application
@@ -64,9 +68,6 @@ async function createWindow(): Promise<void> {
     }
     return { action: 'deny' };
   });
-
-  const api = await bootstrap(ApiModule);
-  win.webContents.send('init-api', api.getPaths());
 }
 
 app.whenReady().then(createWindow);

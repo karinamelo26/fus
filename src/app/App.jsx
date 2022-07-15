@@ -37,7 +37,7 @@ export const App = () => {
             Vite Docs
           </a>
           <div className={styles.staticPublic}>
-            Place static files into the <code>/public</code> folder this
+            Place static files into the <code>/public</code> folder
             <img alt="alt" style={{ width: 77 }} src="./node.png" />
           </div>
         </div>

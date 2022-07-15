@@ -13,8 +13,18 @@ async function electron(): Promise<PluginOption[]> {
 
 const SRC_PATH = join(process.cwd(), 'src');
 
+const onlyFrontEnd = !!process.env.ONLY_FRONT_END;
+
 export default defineConfig(async () => {
   await deleteDist();
+  const plugins: PluginOption[] = [
+    react({
+      fastRefresh: false,
+    }),
+  ];
+  if (!onlyFrontEnd) {
+    plugins.push(await electron());
+  }
   return {
     clearScreen: false,
     resolve: {
@@ -22,12 +32,6 @@ export default defineConfig(async () => {
         '@styles': join(SRC_PATH, 'styles'),
       },
     },
-    plugins: [
-      react({
-        include: ['src/**/*.jsx'],
-        fastRefresh: false,
-      }),
-      await electron(),
-    ],
+    plugins,
   };
 });

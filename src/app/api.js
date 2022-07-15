@@ -21,7 +21,7 @@ export async function api(path, ...data) {
     throw {
       success: false,
       statusCode: 500,
-      message: 'API is not available. Build is broken!',
+      message: 'API is not available. Build is broken or electron is not running!',
       data: null,
     };
   }
