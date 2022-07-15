@@ -8,6 +8,19 @@
 
 /**
  *
+ * @type {Record<string, (...args: any[]) => Promise<any>>}
+ */
+let apiInternal;
+async function resolveApi() {
+  if (apiInternal) {
+    return apiInternal;
+  }
+  await window['api-ready']();
+  return (apiInternal = window['api-internal']);
+}
+
+/**
+ *
  * @param {string} path
  * @param {any} data
  * @returns {Promise<Response>}
@@ -16,8 +29,9 @@ export async function api(path, ...data) {
   /**
    * @type {Response}
    */
+  await resolveApi();
   let result;
-  if (!window.api) {
+  if (!apiInternal) {
     throw {
       success: false,
       statusCode: 500,
@@ -25,7 +39,7 @@ export async function api(path, ...data) {
       data: null,
     };
   }
-  const method = window.api[path];
+  const method = apiInternal[path];
   if (!method) {
     result = {
       success: false,
@@ -35,7 +49,7 @@ export async function api(path, ...data) {
     };
   } else {
     try {
-      result = await window.api[path](...data);
+      result = await method(...data);
     } catch (error) {
       console.error(error);
       result = {

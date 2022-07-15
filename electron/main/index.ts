@@ -2,7 +2,7 @@ import 'reflect-metadata';
 import { release } from 'os';
 import { join } from 'path';
 
-import { app, BrowserWindow, shell, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain, shell } from 'electron';
 
 import { ApiModule } from './api.module';
 import { bootstrap } from './bootstrap';
@@ -24,7 +24,7 @@ if (!app.requestSingleInstanceLock()) {
 
 // TODO find a way to reload the preload script when the front-end is changed
 
-const DIST_PATH = join(process.cwd(), 'dist');
+const DIST_PATH = app.isPackaged ? join(process.resourcesPath, 'app.asar', 'dist') : join(process.cwd(), 'dist');
 
 let win: BrowserWindow | null = null;
 // Here, you can also use other preload

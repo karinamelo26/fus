@@ -98,6 +98,13 @@ window.onmessage = ev => {
 
 setTimeout(removeLoading, 4999);
 
+let apiReadyPromiseResolve: () => void;
+const apiReadyPromise = new Promise<void>(resolve => {
+  apiReadyPromiseResolve = resolve;
+});
+
+contextBridge.exposeInMainWorld('api-ready', () => apiReadyPromise);
+
 ipcRenderer.on('init-api', (_, paths: string[]) => {
   const api = paths.reduce(
     (acc, path) => ({
@@ -114,5 +121,6 @@ ipcRenderer.on('init-api', (_, paths: string[]) => {
     }),
     {}
   );
-  contextBridge.exposeInMainWorld('api', api);
+  contextBridge.exposeInMainWorld('api-internal', api);
+  apiReadyPromiseResolve();
 });

@@ -17,15 +17,12 @@ const onlyFrontEnd = !!process.env.ONLY_FRONT_END;
 
 export default defineConfig(async () => {
   await deleteDist();
-  const plugins: PluginOption[] = [
-    react({
-      fastRefresh: false,
-    }),
-  ];
+  const plugins: PluginOption[] = [react({ fastRefresh: false })];
   if (!onlyFrontEnd) {
     plugins.push(await electron());
   }
   return {
+    base: './',
     clearScreen: false,
     resolve: {
       alias: {
