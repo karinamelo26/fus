@@ -1,11 +1,14 @@
 import { ChildProcess, spawn } from 'child_process';
 import { copyFile, readFile, rm } from 'fs/promises';
+import { join, resolve } from 'path';
 
 import { build as esbuild, BuildOptions } from 'esbuild';
 import globby from 'globby';
 import TscWatchClient from 'tsc-watch/client';
 import { CompilerOptions, createProgram, ModuleKind, ModuleResolutionKind, ScriptTarget } from 'typescript';
 import { PluginOption, ResolvedConfig } from 'vite';
+
+import { DIST_ELECTRON_PATH, DIST_PATH, ELECTRON_PATH } from './constants';
 
 async function getCompilerOptions(production = false): Promise<CompilerOptions> {
   const tsConfigFile = await readFile('tsconfig.json');
@@ -21,17 +24,20 @@ async function getCompilerOptions(production = false): Promise<CompilerOptions> 
   };
 }
 
+const DIST_ELECTRON_TEMP_BUILD_PATH = join(DIST_ELECTRON_PATH, 'temp-main');
+const DIST_ELECTRON_TEMP_SERVE_PATH = join(DIST_PATH, 'temp');
+
 async function getFiles(): Promise<string[]> {
-  return globby('electron/main/**/*.ts');
+  return globby(resolve(ELECTRON_PATH, 'main/**/*.ts'));
 }
 
-function getEsbuildConfig(production = false, path = 'dist/electron/temp-main/index.js'): BuildOptions {
+function getEsbuildConfig(production = false, path = join(DIST_ELECTRON_TEMP_BUILD_PATH, 'index.js')): BuildOptions {
   return {
     bundle: true,
     entryPoints: [path],
     platform: 'node',
     external: ['typeorm', 'sqlite3', 'electron'],
-    outfile: 'dist/electron/main/index.js',
+    outfile: join(DIST_ELECTRON_PATH, 'main', 'index.js'),
     sourcemap: !production,
     minify: production,
   };
@@ -58,8 +64,8 @@ function build(): PluginOption {
       await esbuild(getEsbuildConfig(config?.isProduction));
       console.log('Copying files to build');
       await Promise.all([
-        rm('dist/electron/temp-main', { recursive: true }),
-        copyFile('package.json', 'dist/electron/main/package.json'),
+        rm(DIST_ELECTRON_TEMP_BUILD_PATH, { recursive: true }),
+        copyFile(join(process.cwd(), 'package.json'), join(DIST_ELECTRON_PATH, 'main', 'package.json')),
       ]);
       console.log('Build completed!');
     },
@@ -83,7 +89,7 @@ function serve(): PluginOption {
             electronApp.kill();
           }
           console.log('Building files with esbuild');
-          await esbuild(getEsbuildConfig(false, 'dist/temp/electron/main/index.js'));
+          await esbuild(getEsbuildConfig(false, join(DIST_ELECTRON_TEMP_SERVE_PATH, 'electron', 'main', 'index.js')));
           server.ws.send({ type: 'full-reload' });
           electronApp = spawn(electronPath, ['.'], { stdio: 'inherit' });
           electronApp.on('error', () => {
@@ -94,7 +100,7 @@ function serve(): PluginOption {
           });
           console.log('Finished building');
         });
-        watch.start('--project', 'tsconfig.dev.json', '--outDir', 'dist/temp', '--preserveWatchOutput');
+        watch.start('--project', 'tsconfig.dev.json');
       });
     },
   };

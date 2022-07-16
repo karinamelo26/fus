@@ -3,6 +3,8 @@
   "include": ["electron/main/**/*.ts"],
   "compilerOptions": {
     "declaration": true,
-    "sourceMap": true
+    "sourceMap": true,
+    "outDir": "dist/temp",
+    "preserveWatchOutput": true
   }
 }

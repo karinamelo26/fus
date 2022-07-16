@@ -1,5 +1,9 @@
+import { join } from 'path';
+
 import { build as viteBuild, InlineConfig, PluginOption, ResolvedConfig } from 'vite';
 import electronRenderer from 'vite-plugin-electron-renderer';
+
+import { DIST_ELECTRON_PATH, ELECTRON_PATH } from './constants';
 
 function getBuildConfig(production = false): InlineConfig {
   return {
@@ -12,7 +16,7 @@ function getBuildConfig(production = false): InlineConfig {
       minify: production,
       rollupOptions: {
         input: {
-          index: 'electron/preload/index.ts',
+          index: join(ELECTRON_PATH, 'preload', 'index.ts'),
         },
         output: {
           format: 'cjs',
@@ -22,7 +26,7 @@ function getBuildConfig(production = false): InlineConfig {
           assetFileNames: '[name].[ext]',
         },
       },
-      outDir: 'dist/electron/preload',
+      outDir: join(DIST_ELECTRON_PATH, 'preload'),
       sourcemap: !production,
     },
     plugins: [electronRenderer({})],
