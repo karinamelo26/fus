@@ -1,6 +1,6 @@
 import { ChildProcess, spawn } from 'child_process';
 import { copyFile, readFile, rm } from 'fs/promises';
-import { join, resolve } from 'path';
+import { join } from 'path';
 
 import { build as esbuild, BuildOptions } from 'esbuild';
 import globby from 'globby';
@@ -8,7 +8,10 @@ import TscWatchClient from 'tsc-watch/client';
 import { CompilerOptions, createProgram, ModuleKind, ModuleResolutionKind, ScriptTarget } from 'typescript';
 import { PluginOption, ResolvedConfig } from 'vite';
 
-import { DIST_ELECTRON_PATH, DIST_PATH, ELECTRON_PATH } from './constants';
+import { DIST_ELECTRON_PATH, DIST_PATH } from './constants';
+
+const DIST_ELECTRON_TEMP_BUILD_PATH = join(DIST_ELECTRON_PATH, 'temp-main');
+const DIST_ELECTRON_TEMP_SERVE_PATH = join(DIST_PATH, 'temp');
 
 async function getCompilerOptions(production = false): Promise<CompilerOptions> {
   const tsConfigFile = await readFile('tsconfig.json');
@@ -20,15 +23,12 @@ async function getCompilerOptions(production = false): Promise<CompilerOptions> 
     target: ScriptTarget.ESNext,
     moduleResolution: ModuleResolutionKind.NodeJs,
     module: ModuleKind.CommonJS,
-    outDir: 'dist/electron/temp-main',
+    outDir: DIST_ELECTRON_TEMP_BUILD_PATH,
   };
 }
 
-const DIST_ELECTRON_TEMP_BUILD_PATH = join(DIST_ELECTRON_PATH, 'temp-main');
-const DIST_ELECTRON_TEMP_SERVE_PATH = join(DIST_PATH, 'temp');
-
 async function getFiles(): Promise<string[]> {
-  return globby(resolve(ELECTRON_PATH, 'main/**/*.ts'));
+  return globby('electron/main/**/*.ts');
 }
 
 function getEsbuildConfig(production = false, path = join(DIST_ELECTRON_TEMP_BUILD_PATH, 'index.js')): BuildOptions {
