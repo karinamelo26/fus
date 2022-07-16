@@ -19,7 +19,6 @@ export const App = () => {
         <p>Hello Electron + Vite + React!</p>
         <p>
           <button onClick={set}>count is: {count}</button>
-          {JSON.stringify(query)}
         </p>
         <p>
           Edit <code>App.tsx</code> and save to test HMR updates.
