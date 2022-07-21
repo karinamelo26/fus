@@ -1,46 +1,34 @@
-import { rmSync } from 'fs';
 import { join } from 'path';
 
 import react from '@vitejs/plugin-react';
-import { defineConfig } from 'vite';
-import electron from 'vite-plugin-electron';
+import { defineConfig, PluginOption } from 'vite';
 
-rmSync(join(__dirname, 'dist'), { recursive: true, force: true }); // v14.14.0
+import { main } from './scripts/main';
+import { preload } from './scripts/preload';
+import { deleteDist } from './scripts/utils';
 
-// https://vitejs.dev/config/
-export default defineConfig({
-  resolve: {
-    alias: {
-      '@styles': join(__dirname, 'src/styles'),
+async function electron(): Promise<PluginOption[]> {
+  return [preload(), main()];
+}
+
+const SRC_PATH = join(process.cwd(), 'src');
+
+const onlyFrontEnd = !!process.env.ONLY_FRONT_END;
+
+export default defineConfig(async () => {
+  await deleteDist();
+  const plugins: PluginOption[] = [react({ fastRefresh: false })];
+  if (!onlyFrontEnd) {
+    plugins.push(await electron());
+  }
+  return {
+    base: './',
+    clearScreen: false,
+    resolve: {
+      alias: {
+        '@styles': join(SRC_PATH, 'styles'),
+      },
     },
-  },
-  plugins: [
-    react(),
-    electron({
-      main: {
-        entry: 'electron/main/index.ts',
-        vite: {
-          build: {
-            sourcemap: false,
-            outDir: 'dist/electron/main',
-          },
-        },
-      },
-      preload: {
-        input: {
-          // You can configure multiple preload scripts here
-          index: join(__dirname, 'electron/preload/index.ts'),
-        },
-        vite: {
-          build: {
-            // For debug
-            sourcemap: 'inline',
-            outDir: 'dist/electron/preload',
-          },
-        },
-      },
-      // Enables use of Node.js API in the Electron-Renderer
-      renderer: {},
-    }),
-  ],
+    plugins,
+  };
 });

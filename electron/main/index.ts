@@ -1,7 +1,11 @@
+import 'reflect-metadata';
 import { release } from 'os';
 import { join } from 'path';
 
-import { app, BrowserWindow, shell, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain, shell } from 'electron';
+
+import { ApiModule } from './api.module';
+import { bootstrap } from './bootstrap';
 
 // Disable GPU Acceleration for Windows 7
 if (release().startsWith('6.1')) {
@@ -18,41 +22,41 @@ if (!app.requestSingleInstanceLock()) {
   process.exit(0);
 }
 
-export const ROOT_PATH = {
-  // /dist
-  dist: join(__dirname, '../..'),
-  // /dist or /public
-  public: join(__dirname, app.isPackaged ? '../..' : '../../../public'),
-};
+const DIST_PATH = app.isPackaged ? join(process.resourcesPath, 'app.asar', 'dist') : join(process.cwd(), 'dist');
 
 let win: BrowserWindow | null = null;
 // Here, you can also use other preload
-const preload = join(__dirname, '../preload/index.js');
+const preload = join(DIST_PATH, 'electron', 'preload', 'index.js');
 // 🚧 Use ['ENV_NAME'] avoid vite:define plugin
 const url = `http://localhost:3000`;
-const indexHtml = join(ROOT_PATH.dist, 'index.html');
+const indexHtml = join(DIST_PATH, 'index.html');
 
 async function createWindow(): Promise<void> {
   win = new BrowserWindow({
     title: 'Main window',
-    icon: join(ROOT_PATH.public, 'favicon.svg'),
+    icon: join(DIST_PATH, 'favicon.svg'),
     webPreferences: {
       preload,
       nodeIntegration: true,
-      contextIsolation: false,
-      devTools: !app.isPackaged,
+      contextIsolation: true,
     },
   });
+  win.maximize();
 
   if (app.isPackaged) {
     await win.loadFile(indexHtml);
   } else {
     await win.loadURL(url);
+    win.webContents.openDevTools();
   }
+
+  const api = await bootstrap(ApiModule);
+  win.webContents.send('init-api', api.getPaths());
 
   // Test actively push message to the Electron-Renderer
   win.webContents.on('did-finish-load', () => {
     win?.webContents.send('main-process-message', new Date().toLocaleString());
+    win?.webContents.send('init-api', api.getPaths());
   });
 
   // Make all links open with the browser, not with the application

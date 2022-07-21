@@ -1,8 +1,16 @@
 import { useState } from 'react';
 import styles from '@styles/app.module.scss';
+import { api } from './api';
 
 export const App = () => {
   const [count, setCount] = useState(0);
+
+  async function set() {
+    setCount(_count => _count + 1);
+    console.time('api-call');
+    await api('scheduler/get-all', { id: 1 }).then(console.log).catch(console.error);
+    console.timeEnd('api-call');
+  }
 
   return (
     <div className={styles.app}>
@@ -10,7 +18,7 @@ export const App = () => {
         <div className={styles.logos}></div>
         <p>Hello Electron + Vite + React!</p>
         <p>
-          <button onClick={() => setCount(_count => _count + 1)}>count is: {count}</button>
+          <button onClick={set}>count is: {count}</button>
         </p>
         <p>
           Edit <code>App.tsx</code> and save to test HMR updates.

@@ -1,3 +1,8 @@
+import { contextBridge, ipcRenderer } from 'electron';
+
+import { InternalServerErrorException } from '../main/api/exception';
+import { Response } from '../main/api/response';
+
 function domReady(condition: DocumentReadyState[] = ['complete', 'interactive']): Promise<boolean> {
   return new Promise(resolve => {
     if (condition.includes(document.readyState)) {
@@ -86,7 +91,36 @@ const { appendLoading, removeLoading } = useLoading();
 domReady().then(appendLoading);
 
 window.onmessage = ev => {
-  ev.data.payload === 'removeLoading' && removeLoading();
+  if (ev.data.payload === 'removeLoading') {
+    removeLoading();
+  }
 };
 
 setTimeout(removeLoading, 4999);
+
+let apiReadyPromiseResolve: () => void;
+const apiReadyPromise = new Promise<void>(resolve => {
+  apiReadyPromiseResolve = resolve;
+});
+
+contextBridge.exposeInMainWorld('api-ready', () => apiReadyPromise);
+
+ipcRenderer.on('init-api', (_, paths: string[]) => {
+  const api = paths.reduce(
+    (acc, path) => ({
+      ...acc,
+      [path]: async (...args: unknown[]) => {
+        let result: Response;
+        try {
+          result = await ipcRenderer.invoke(path, ...args);
+        } catch (error) {
+          result = new InternalServerErrorException(error?.message ?? error?.error ?? 'Unknown error');
+        }
+        return JSON.parse(JSON.stringify(result));
+      },
+    }),
+    {}
+  );
+  contextBridge.exposeInMainWorld('api-internal', api);
+  apiReadyPromiseResolve();
+});
