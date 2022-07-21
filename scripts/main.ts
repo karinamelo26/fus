@@ -1,6 +1,7 @@
 import { ChildProcess, spawn } from 'child_process';
 import { copyFile, readFile, rm } from 'fs/promises';
 import { join } from 'path';
+import { performance } from 'perf_hooks';
 
 import { build as esbuild, BuildOptions } from 'esbuild';
 import globby from 'globby';
@@ -8,14 +9,22 @@ import TscWatchClient from 'tsc-watch/client';
 import { CompilerOptions, createProgram, ModuleKind, ModuleResolutionKind, ScriptTarget } from 'typescript';
 import { PluginOption, ResolvedConfig } from 'vite';
 
+import { Logger } from '../electron/main/logger/logger';
+import { formatPerformanceTime } from '../electron/main/util/format-performance-time';
+
 import { DIST_ELECTRON_PATH, DIST_PATH } from './constants';
 
 const DIST_ELECTRON_TEMP_BUILD_PATH = join(DIST_ELECTRON_PATH, 'temp-main');
 const DIST_ELECTRON_TEMP_SERVE_PATH = join(DIST_PATH, 'temp');
 
+let cachedCompilerOptions: CompilerOptions | undefined;
+
 async function getCompilerOptions(production = false): Promise<CompilerOptions> {
-  const tsConfigFile = await readFile('tsconfig.json');
-  const compilerOptions: CompilerOptions = JSON.parse(tsConfigFile.toString()).compilerOptions;
+  const compilerOptions =
+    cachedCompilerOptions ??
+    (cachedCompilerOptions = await readFile(join(process.cwd(), 'tsconfig.json')).then(
+      file => JSON.parse(file.toString()).compilerOptions
+    ));
   return {
     ...compilerOptions,
     sourceMap: !production,
@@ -44,6 +53,7 @@ function getEsbuildConfig(production = false, path = join(DIST_ELECTRON_TEMP_BUI
 }
 
 function build(): PluginOption {
+  const logger = Logger.create('Main build');
   let config: ResolvedConfig | undefined;
   return {
     name: 'vite-plugin-electron-main-build',
@@ -52,22 +62,24 @@ function build(): PluginOption {
       config = resolvedConfig;
     },
     writeBundle: async () => {
-      console.log('Building electron');
-      console.log('Getting files');
+      const startMs = performance.now();
+      logger.log('Building electron');
+      logger.log('Getting files');
       const files = await getFiles();
-      console.log('Getting compiler options');
+      logger.log('Getting compiler options');
       const compilerOptions = await getCompilerOptions(config?.isProduction);
       const program = createProgram(files, compilerOptions);
-      console.log('Transpiling typescript files');
+      logger.log('Transpiling typescript files');
       program.emit();
-      console.log('Bundling with esbuild');
+      logger.log('Bundling with esbuild');
       await esbuild(getEsbuildConfig(config?.isProduction));
-      console.log('Copying files to build');
+      logger.log('Copying files to build');
       await Promise.all([
         rm(DIST_ELECTRON_TEMP_BUILD_PATH, { recursive: true }),
         copyFile(join(process.cwd(), 'package.json'), join(DIST_ELECTRON_PATH, 'main', 'package.json')),
       ]);
-      console.log('Build completed!');
+      const endMs = performance.now();
+      logger.log('Build completed!', ...formatPerformanceTime(startMs, endMs));
     },
   };
 }
@@ -77,28 +89,29 @@ function serve(): PluginOption {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const electronPath = require('electron') as unknown as string;
   let electronApp: ChildProcess | undefined;
+  const logger = Logger.create('Main serve');
   return {
     name: 'vite-plugin-electron-main-serve',
     apply: 'serve',
     configureServer: server => {
       server.httpServer?.on('listening', async () => {
-        console.log('starting server');
         watch.on('success', async () => {
+          const startMs = performance.now();
+          logger.log('Building files with esbuild');
           if (electronApp) {
             electronApp.removeAllListeners();
             electronApp.kill();
           }
-          console.log('Building files with esbuild');
           await esbuild(getEsbuildConfig(false, join(DIST_ELECTRON_TEMP_SERVE_PATH, 'electron', 'main', 'index.js')));
           server.ws.send({ type: 'full-reload' });
           electronApp = spawn(electronPath, ['.'], { stdio: 'inherit' });
           electronApp.on('error', () => {
-            console.log({ hasError: 'error' });
             watch.kill();
             process.exit(1);
             server.close();
           });
-          console.log('Finished building');
+          const endMs = performance.now();
+          logger.log('Finished building', ...formatPerformanceTime(startMs, endMs));
         });
         watch.start('--project', 'tsconfig.dev.json');
       });

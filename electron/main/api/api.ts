@@ -1,3 +1,5 @@
+import { performance } from 'perf_hooks';
+
 import { plainToInstance } from 'class-transformer';
 import { ipcMain, IpcMainInvokeEvent } from 'electron';
 import { isArray, isNil, isObject, isPlainObject } from 'st-utils';
@@ -5,7 +7,9 @@ import { Class } from 'type-fest';
 
 import { injector as injectorInstance, Injector } from '../di/injector';
 import { ClassProvider, isProvider } from '../di/provider';
+import { Logger } from '../logger/logger';
 import { AnyObject } from '../util/any-object.type';
+import { formatPerformanceTime } from '../util/format-performance-time';
 import { isClass } from '../util/util';
 
 import { Controller, ControllerMetadata, MethodMetadata } from './controller';
@@ -25,6 +29,7 @@ type ModuleWithoutImports = Required<Omit<ModuleOptions, 'imports'>>;
 export class Api {
   private constructor(private readonly moduleMetadata: ModuleOptions, private readonly injector: Injector) {}
 
+  private readonly _logger = Logger.create(this);
   private readonly _paths: string[] = [];
   private readonly _moduleSet = new Map<any, ModuleWithoutImports>();
 
@@ -128,10 +133,12 @@ export class Api {
   private _initController(controllerMetadata: ControllerMetadata): void {
     const instance = this.injector.get(controllerMetadata.target);
     for (const [, methodMetadata] of controllerMetadata.methods) {
+      const startMs = performance.now();
       const path = `${controllerMetadata.path}/${methodMetadata.path}`;
       this._paths.push(path);
       ipcMain.handle(path, this._createHandler(instance, methodMetadata));
-      console.log(`[${path}] Initialized`);
+      const endMs = performance.now();
+      this._logger.log(`[${path}] Initialized`, ...formatPerformanceTime(startMs, endMs));
     }
   }
 
@@ -152,6 +159,8 @@ export class Api {
   }
 
   async init(): Promise<this> {
+    const startMs = performance.now();
+    this._logger.log('Initializing API');
     const childrenModules = this._getChildrenModuleOptions();
     const providers = [...(this.moduleMetadata.providers ?? []), ...childrenModules.providers].filter(isProvider);
     const controllers = [...(this.moduleMetadata.controllers ?? []), ...childrenModules.controllers];
@@ -159,6 +168,8 @@ export class Api {
     this.injector.addProviders([...providers, ...controllersProviders]);
     await this.injector.resolveAll();
     await this._initControllers(controllers);
+    const endMs = performance.now();
+    this._logger.log('API Initialized', ...formatPerformanceTime(startMs, endMs));
     return this;
   }
 

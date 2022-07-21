@@ -14,7 +14,6 @@ class Dto {
 export class SchedulerController {
   @Method('get-all')
   async getAll(@Data() data: Dto): Promise<any[]> {
-    console.log(data);
     return [data];
   }
 }
