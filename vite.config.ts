@@ -29,6 +29,9 @@ export default defineConfig(async () => {
         '@styles': join(SRC_PATH, 'styles'),
       },
     },
+    server: {
+      port: 4200,
+    },
     plugins,
   };
 });
