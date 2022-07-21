@@ -28,7 +28,7 @@ let win: BrowserWindow | null = null;
 // Here, you can also use other preload
 const preload = join(DIST_PATH, 'electron', 'preload', 'index.js');
 // 🚧 Use ['ENV_NAME'] avoid vite:define plugin
-const url = `http://localhost:3000`;
+const url = `http://localhost:4200`;
 const indexHtml = join(DIST_PATH, 'index.html');
 
 async function createWindow(): Promise<void> {
