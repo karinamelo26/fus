@@ -10,7 +10,7 @@ import { FactoryProvider } from './di/provider';
 import { Logger } from './logger/logger';
 import { formatPerformanceTime } from './util/format-performance-time';
 
-type DatabaseModuleOptions = DataSourceOptions & {
+type TypeORMModuleOptions = DataSourceOptions & {
   repositories?: Class<Repository<any>, [EntityTarget<any>, EntityManager, QueryRunner?]>[];
   autoLoadEntities?: boolean;
 };
@@ -38,11 +38,11 @@ function createProvider(repository: Class<Repository<any>>): FactoryProvider {
 }
 
 @Module({})
-export class DatabaseModule {
+export class TypeORMModule {
   private static readonly _logger = Logger.create('DatabaseModule');
 
-  static forRoot(options: DatabaseModuleOptions): ModuleWithProviders {
-    return new ModuleWithProviders(DatabaseModule, [
+  static forRoot(options: TypeORMModuleOptions): ModuleWithProviders {
+    return new ModuleWithProviders(TypeORMModule, [
       {
         provide: DataSource,
         useFactory: async () => {
@@ -64,6 +64,6 @@ export class DatabaseModule {
   }
 
   static forChild(repositories: Class<Repository<any>>[]): ModuleWithProviders {
-    return new ModuleWithProviders(DatabaseModule, repositories.map(createProvider));
+    return new ModuleWithProviders(TypeORMModule, repositories.map(createProvider));
   }
 }
