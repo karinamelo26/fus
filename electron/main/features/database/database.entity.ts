@@ -1,6 +1,7 @@
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, OneToMany } from 'typeorm';
 
 import { BaseEntity } from '../../shared/base-entity';
+import { ScheduleEntity } from '../schedule/schedule.entity';
 
 import { DatabaseTypeEnum } from './database-type.enum';
 
@@ -26,4 +27,7 @@ export class DatabaseEntity extends BaseEntity {
 
   @Column({ type: 'simple-enum', enum: DatabaseTypeEnum })
   type!: DatabaseTypeEnum;
+
+  @OneToMany(() => ScheduleEntity, schedule => schedule.idDatabase)
+  schedules?: ScheduleEntity[];
 }
