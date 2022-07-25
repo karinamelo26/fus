@@ -1,19 +1,17 @@
 import { performance } from 'perf_hooks';
 
 import { Class } from 'type-fest';
-import { DataSource, DataSourceOptions, EntityManager, EntityTarget, QueryRunner, Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 
-import { Module } from './api/module';
-import { ModuleWithProviders } from './api/module-with-providers';
-import { EntityRepository } from './di/entity-repository';
-import { FactoryProvider } from './di/provider';
-import { Logger } from './logger/logger';
-import { formatPerformanceTime } from './util/format-performance-time';
+import { Module } from '../api/module';
+import { ModuleWithProviders } from '../api/module-with-providers';
+import { EntityRepository } from '../di/entity-repository';
+import { InjectionToken } from '../di/injection-token';
+import { FactoryProvider } from '../di/provider';
+import { Logger } from '../logger/logger';
+import { formatPerformanceTime } from '../util/format-performance-time';
 
-type TypeORMModuleOptions = DataSourceOptions & {
-  repositories?: Class<Repository<any>, [EntityTarget<any>, EntityManager, QueryRunner?]>[];
-  autoLoadEntities?: boolean;
-};
+import { TypeORMModuleOptions } from './typeorm-module-options';
 
 function createProvider(repository: Class<Repository<any>>): FactoryProvider {
   return new FactoryProvider(
@@ -41,11 +39,11 @@ function createProvider(repository: Class<Repository<any>>): FactoryProvider {
 export class TypeORMModule {
   private static readonly _logger = Logger.create('DatabaseModule');
 
-  static forRoot(options: TypeORMModuleOptions): ModuleWithProviders {
+  static forRoot(token: InjectionToken<TypeORMModuleOptions>): ModuleWithProviders {
     return new ModuleWithProviders(TypeORMModule, [
       {
         provide: DataSource,
-        useFactory: async () => {
+        useFactory: async (options: TypeORMModuleOptions) => {
           const startMs = performance.now();
           this._logger.log('Establishing connection');
           let newOptions = options;
@@ -58,8 +56,8 @@ export class TypeORMModule {
           this._logger.log('Connection established', ...formatPerformanceTime(startMs, endMs));
           return dataSource;
         },
+        deps: [token],
       },
-      ...(options.repositories ?? []).map(createProvider),
     ]);
   }
 

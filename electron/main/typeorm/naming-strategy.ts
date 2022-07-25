@@ -13,7 +13,7 @@ export class NamingStrategy extends DefaultNamingStrategy {
     const replacedTableName = tableName.replace('.', '_');
     const replacedReferenceTablePath = referencedTablePath.replace('.', '_');
     const key = `${replacedTableName}_${replacedReferenceTablePath}_${clonedColumnNames.join('_')}`;
-    return 'FK_' + RandomGenerator.sha1(key).substr(0, 27);
+    return 'FK_' + RandomGenerator.sha1(key).substring(0, 27);
   }
 
   override tableName(targetName: string, userSpecifiedName: string | undefined): string {

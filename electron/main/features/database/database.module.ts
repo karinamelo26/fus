@@ -1,5 +1,5 @@
 import { Module } from '../../api/module';
-import { TypeORMModule } from '../../typeorm.module';
+import { TypeORMModule } from '../../typeorm/typeorm.module';
 
 import { DatabaseController } from './database.controller';
 import { DatabaseRepository } from './database.repository';
