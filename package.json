@@ -12,15 +12,16 @@
     "build": "vite build",
     "build-electron": "npm run build && electron-builder",
     "prepare": "husky install",
-    "lint-staged": "lint-staged"
+    "lint-staged": "lint-staged",
+    "prisma": "prisma",
+    "postinstall": "tsx ./scripts/generate-env.ts && prisma generate"
   },
   "engines": {
     "node": ">=18.0.0"
   },
   "dependencies": {
-    "electron-store": "~8.0.2",
-    "sqlite3": "~5.0.10",
-    "typeorm": "~0.3.7"
+    "@prisma/client": "~4.1.0",
+    "electron-store": "~8.0.2"
   },
   "devDependencies": {
     "@emotion/react": "~11.9.3",
@@ -39,6 +40,7 @@
     "class-transformer": "~0.5.1",
     "class-validator": "~0.13.2",
     "cross-env": "~7.0.3",
+    "dotenv": "~16.0.1",
     "electron": "~19.0.9",
     "electron-builder": "~23.1.0",
     "esbuild": "~0.14.49",
@@ -51,6 +53,8 @@
     "husky": "~8.0.1",
     "lint-staged": "~13.0.3",
     "prettier": "~2.7.1",
+    "prettier-plugin-prisma": "~4.1.0",
+    "prisma": "~4.1.0",
     "react": "~18.2.0",
     "react-dom": "~18.2.0",
     "react-hook-form": "~7.33.1",
@@ -60,9 +64,13 @@
     "st-utils": "~2.6.0",
     "tsc-watch": "~5.0.3",
     "tslib": "~2.4.0",
+    "tsx": "~3.8.0",
     "type-fest": "~2.17.0",
     "typescript": "~4.7.4",
     "vite": "~3.0.2",
     "vite-plugin-electron-renderer": "~0.8.1"
+  },
+  "prisma": {
+    "schema": "./electron/main/prisma/schema.prisma"
   }
 }

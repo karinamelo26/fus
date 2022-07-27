@@ -1,8 +1,4 @@
-import { Repository } from 'typeorm';
+import { createRepository, Repository } from '../../di/repository';
 
-import { EntityRepository } from '../../di/entity-repository';
-
-import { ScheduleEntity } from './schedule.entity';
-
-@EntityRepository(ScheduleEntity)
-export class ScheduleRepository extends Repository<ScheduleEntity> {}
+@Repository()
+export class ScheduleRepository extends createRepository('schedule') {}

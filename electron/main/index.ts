@@ -2,7 +2,10 @@ import 'reflect-metadata';
 import { release } from 'os';
 import { join } from 'path';
 
+import { config } from 'dotenv';
 import { app, BrowserWindow, ipcMain, shell } from 'electron';
+
+config();
 
 import { ApiModule } from './api.module';
 import { bootstrap } from './bootstrap';

@@ -19,7 +19,7 @@
     "useUnknownInCatchVariables": false,
     "outDir": "dist",
     "sourceMap": true,
-    "declaration": false
+    "declaration": false,
   },
   "include": ["vite.config.ts", "package.json", "electron", "scripts"]
 }

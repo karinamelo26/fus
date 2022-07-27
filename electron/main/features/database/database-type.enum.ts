@@ -1,4 +1,4 @@
 export enum DatabaseTypeEnum {
-  MySQL = 'mysql',
-  SQLServer = 'mssql',
+  MySQL,
+  SQLServer,
 }

@@ -104,12 +104,15 @@ export class Injector {
 
   async resolveAll(): Promise<this> {
     const injectableEntries = Injectable.getAll().filter(([, options]) => options.global);
-    for (const [target] of injectableEntries) {
-      this._providers.set(target, new ClassProvider(target, target));
+    for (const [target, options] of injectableEntries) {
+      const provider = options.useFactory
+        ? new FactoryProvider(target, options.useFactory, options.deps)
+        : new ClassProvider(target, target);
+      this._providers.set(target, provider);
     }
     const providers = [...this._providers.values()];
     for (const provider of providers) {
-      await this._resolveProvider(provider);
+      await this.resolve(provider.provide);
     }
     return this;
   }

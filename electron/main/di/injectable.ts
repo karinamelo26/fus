@@ -1,5 +1,7 @@
 export interface InjectableOptions {
   global?: boolean;
+  useFactory?: (...args: any[]) => any;
+  deps?: any[];
 }
 
 interface Injectable {
