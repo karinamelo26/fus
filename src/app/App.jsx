@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import styles from '@styles/app.module.scss';
 import { api } from './api';
+import { Button } from '@mui/material';
+import { Delete } from '@mui/icons-material';
 
 export const App = () => {
   const [count, setCount] = useState(0);
@@ -14,34 +16,11 @@ export const App = () => {
 
   return (
     <div className={styles.app}>
-      <header className={styles.appHeader}>
-        <div className={styles.logos}></div>
-        <p>Hello Electron + Vite + React!</p>
-        <p>
-          <button onClick={set}>count is: {count}</button>
-        </p>
-        <p>
-          Edit <code>App.tsx</code> and save to test HMR updates.
-        </p>
-        <div>
-          <a className={styles.appLink} href="https://reactjs.org" target="_blank" rel="noopener noreferrer">
-            Learn React
-          </a>
-          {' | '}
-          <a
-            className={styles.appLink}
-            href="https://vitejs.dev/guide/features.html"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Vite Docs
-          </a>
-          <div className={styles.staticPublic}>
-            Place static files into the <code>/public</code> folder
-            <img alt="alt" style={{ width: 77 }} src="./node.png" />
-          </div>
-        </div>
-      </header>
+      <Button variant={'contained'}>Teste</Button>
+      <Delete></Delete>
+      Lorem ipsum dolor sit amet, consectetur adipisicing elit. Accusantium amet aspernatur eligendi esse ipsam
+      molestias necessitatibus provident quis sint sit. Alias culpa inventore laborum odio perferendis totam velit
+      voluptas voluptates.
     </div>
   );
 };
