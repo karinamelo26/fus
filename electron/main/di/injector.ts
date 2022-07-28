@@ -1,7 +1,7 @@
 import { isFunction } from 'st-utils';
 import { Class } from 'type-fest';
 
-import { ReflectMetadataTypes } from '../util/reflect';
+import { ReflectMetadataTypesEnum } from '../util/reflect-metadata-types.enum';
 
 import { Inject } from './inject';
 import { Injectable } from './injectable';
@@ -27,7 +27,8 @@ export class Injector {
 
   private async _resolveClassProvider<T>(provider: ClassProvider): Promise<T> {
     const injectParams = Inject.getAllForTarget(provider.useClass);
-    const reflectParams: Class<any>[] = Reflect.getMetadata(ReflectMetadataTypes.paramTypes, provider.useClass) ?? [];
+    const reflectParams: Class<any>[] =
+      Reflect.getMetadata(ReflectMetadataTypesEnum.paramTypes, provider.useClass) ?? [];
     const params = reflectParams.map((param, index) => injectParams[index]?.typeFn() ?? param);
     if (!params.length) {
       const instance = new provider.useClass();

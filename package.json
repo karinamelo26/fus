@@ -17,7 +17,10 @@
     "postinstall": "tsx ./scripts/generate-env.ts && prisma generate",
     "migrate:dev": "prisma migrate dev",
     "migrate:dev-create-only": "prisma migrate dev --create-only",
-    "generate-schema": "prisma generate"
+    "generate-schema": "prisma generate",
+    "test": "vitest --run --coverage",
+    "test:watch": "vitest --coverage",
+    "test:ui": "vitest --coverage --ui"
   },
   "engines": {
     "node": ">=18.0.0"
@@ -40,6 +43,8 @@
     "@typescript-eslint/eslint-plugin": "~5.31.0",
     "@typescript-eslint/parser": "~5.31.0",
     "@vitejs/plugin-react": "~2.0.0",
+    "@vitest/ui": "~0.19.1",
+    "c8": "~7.12.0",
     "camelcase": "~6.3.0",
     "class-transformer": "~0.5.1",
     "class-validator": "~0.13.2",
@@ -72,7 +77,8 @@
     "type-fest": "~2.17.0",
     "typescript": "~4.7.4",
     "vite": "~3.0.3",
-    "vite-plugin-electron-renderer": "~0.8.1"
+    "vite-plugin-electron-renderer": "~0.8.1",
+    "vitest": "~0.19.1"
   },
   "prisma": {
     "schema": "./electron/main/prisma/schema.prisma"
