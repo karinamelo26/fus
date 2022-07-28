@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { Class } from 'type-fest';
 
-import { Injectable } from './injectable';
+import { Injectable, InjectableOptions } from './injectable';
 
 const repositorySymbol = Symbol('repository');
 
@@ -12,10 +12,10 @@ export function createRepository<K extends keyof PrismaClient>(repository: K): C
   return CustomRepository as any;
 }
 
-export function Repository(): ClassDecorator {
+export function Repository(options?: Pick<InjectableOptions, 'global'>): ClassDecorator {
   return target => {
     Injectable({
-      global: true,
+      global: options?.global,
       deps: [PrismaClient],
       useFactory: (prismaClient: PrismaClient) => {
         const key: keyof PrismaClient = (target as any)[repositorySymbol];
