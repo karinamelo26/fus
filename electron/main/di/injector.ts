@@ -5,6 +5,7 @@ import { ReflectMetadataTypes } from '../util/reflect';
 
 import { Inject } from './inject';
 import { Injectable } from './injectable';
+import { InjectionToken } from './injection-token';
 import { ClassProvider, FactoryProvider, Provider, ValueProvider } from './provider';
 
 function stringifyTarget(target: any): string {
@@ -62,6 +63,8 @@ export class Injector {
     return this._resolveFactoryProvider(provider);
   }
 
+  async resolve<T>(target: InjectionToken<T>): Promise<T>;
+  async resolve<T>(target: Class<T>): Promise<T>;
   async resolve<T>(target: any): Promise<T> {
     if (this._instances.has(target)) {
       return this._instances.get(target)!;
@@ -85,8 +88,8 @@ export class Injector {
     return this;
   }
 
+  get<T>(target: InjectionToken<T>): T;
   get<T>(target: Class<T>): T;
-  get<T>(target: any): T;
   get<T>(target: any): T {
     const instance = this._instances.get(target);
     if (!instance) {
@@ -101,12 +104,15 @@ export class Injector {
 
   async resolveAll(): Promise<this> {
     const injectableEntries = Injectable.getAll().filter(([, options]) => options.global);
-    for (const [target] of injectableEntries) {
-      this._providers.set(target, new ClassProvider(target, target));
+    for (const [target, options] of injectableEntries) {
+      const provider = options.useFactory
+        ? new FactoryProvider(target, options.useFactory, options.deps)
+        : new ClassProvider(target, target);
+      this._providers.set(target, provider);
     }
     const providers = [...this._providers.values()];
     for (const provider of providers) {
-      await this._resolveProvider(provider);
+      await this.resolve(provider.provide);
     }
     return this;
   }

@@ -1,0 +1,74 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Database {
+  id         String     @id @default(uuid())
+  name       String
+  host       String
+  port       Int
+  username   String
+  password   String
+  database   String
+  /// 0 - MySQL
+  /// 1 - MSSQL
+  type       Int
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  inactiveAt DateTime?
+
+  schedule   Schedule[]
+
+  @@map("database")
+}
+
+model Schedule {
+  id           String    @id @default(uuid())
+  description  String
+  idDatabase   String
+  query        String
+  /// 1-7
+  weekDay      Int?
+  /// 1-12
+  month        Int?
+  /// 1-31
+  monthDay     Int?
+  /// 1-12
+  frequencyDay Int?
+  /// 0-23
+  hour         Int?
+  timeout      Int       @default(30000)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  inactiveAt   DateTime?
+
+  database     Database  @relation(fields: [idDatabase], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  queryHistory QueryHistory[]
+
+  @@map("schedule")
+}
+
+model QueryHistory {
+  id         String    @id @default(uuid())
+  idSchedule String
+  query      String
+  /// 0 - Success
+  /// 1 - Timeout
+  /// 2 - Database not available
+  /// 3 - Query error
+  code       Int
+  message    String?
+  queryTime  Float
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  inactiveAt DateTime?
+
+  schedule Schedule @relation(fields: [idSchedule], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("query_history")
+}

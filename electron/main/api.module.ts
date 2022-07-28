@@ -1,25 +1,9 @@
-import { homedir } from 'os';
-import { join } from 'path';
-
-import { app } from 'electron';
-
 import { Module } from './api/module';
-import { DatabaseModule } from './database.module';
-import { SchedulerModule } from './features/scheduler/scheduler.module';
+import { DatabaseModule } from './features/database/database.module';
+import { ScheduleModule } from './features/schedule/schedule.module';
+import { PrismaModule } from './prisma/prisma.module';
 
 @Module({
-  imports: [
-    DatabaseModule.forRoot({
-      autoLoadEntities: true,
-      type: 'sqlite',
-      database: join(homedir(), '.fus', 'database', 'data.sqlite'),
-      synchronize: false,
-      logging: !app.isPackaged ? 'all' : ['error'],
-      dropSchema: false,
-      migrations: [join(process.cwd(), 'electron', 'main', 'database', 'migrations')],
-      extra: {},
-    }),
-    SchedulerModule,
-  ],
+  imports: [PrismaModule, DatabaseModule, ScheduleModule],
 })
 export class ApiModule {}
