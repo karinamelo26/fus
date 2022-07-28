@@ -5,7 +5,7 @@ import { ipcMain, IpcMainInvokeEvent } from 'electron';
 import { isArray, isNil, isObject, isPlainObject } from 'st-utils';
 import { Class } from 'type-fest';
 
-import { injector as injectorInstance, Injector } from '../di/injector';
+import { Injector } from '../di/injector';
 import { ClassProvider, isProvider } from '../di/provider';
 import { Logger } from '../logger/logger';
 import { AnyObject } from '../util/any-object.type';
@@ -48,7 +48,7 @@ export class Api {
         throw new Error(
           `${JSON.stringify(
             module
-          )} is not a Class nor a ModuleWithProviders. Remember to return a instance of ModuleWithProviders on static methods os Modules`
+          )} is not a Class nor a ModuleWithProviders. Remember to return a instance of ModuleWithProviders on static methods of Modules`
         );
       }
     }
@@ -178,6 +178,6 @@ export class Api {
     if (!metadata) {
       throw new Error(`Module "${module.name}" not configured. Did you forget to put the @Module decorator?`);
     }
-    return new Api(metadata, injectorInstance);
+    return new Api(metadata, Injector.create());
   }
 }

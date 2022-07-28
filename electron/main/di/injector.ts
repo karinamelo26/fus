@@ -13,7 +13,7 @@ function stringifyTarget(target: any): string {
 }
 
 export class Injector {
-  constructor() {
+  private constructor() {
     this._instances.set(Injector, this);
   }
 
@@ -70,9 +70,14 @@ export class Injector {
     if (this._instances.has(target)) {
       return this._instances.get(target)!;
     }
-    const provider = this._providers.get(target);
+    let provider = this._providers.get(target);
     if (!provider) {
-      throw new Error(`"${stringifyTarget(target)}" is not provided globally nor is provided by the providers`);
+      if (target instanceof InjectionToken && target.provider) {
+        provider = new FactoryProvider(target, target.provider.useFactory, target.provider.deps);
+        this.addProvider(provider);
+      } else {
+        throw new Error(`"${stringifyTarget(target)}" is not provided globally nor is provided by the providers`);
+      }
     }
     return this._resolveProvider(provider);
   }
@@ -117,6 +122,8 @@ export class Injector {
     }
     return this;
   }
-}
 
-export const injector = new Injector();
+  static create(): Injector {
+    return new Injector();
+  }
+}
