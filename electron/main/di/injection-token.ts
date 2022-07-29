@@ -1,3 +1,5 @@
+import { FactoryProvider } from './provider';
+
 export class InjectionToken<T> {
-  constructor(public readonly provider?: { useFactory: (...args: any[]) => T; deps?: any[] }) {}
+  constructor(public readonly provider?: Omit<FactoryProvider<T>, 'provide'>) {}
 }

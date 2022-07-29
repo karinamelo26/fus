@@ -12,11 +12,11 @@
  */
 let apiInternal;
 async function resolveApi() {
-  if (apiInternal) {
-    return apiInternal;
+  if (!apiInternal) {
+    await window['api-ready']();
+    apiInternal = window['api-internal'];
   }
-  await window['api-ready']();
-  return (apiInternal = window['api-internal']);
+  return apiInternal;
 }
 
 /**
@@ -51,6 +51,7 @@ export async function api(path, ...data) {
     try {
       result = await method(...data);
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error(error);
       result = {
         success: false,
