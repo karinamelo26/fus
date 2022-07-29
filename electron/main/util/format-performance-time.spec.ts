@@ -1,5 +1,3 @@
-import { describe, expect, it } from 'vitest';
-
 import { ConsoleColor } from '../logger/logger';
 
 import { formatPerformanceTime } from './format-performance-time';

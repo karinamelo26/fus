@@ -1,5 +1,4 @@
 import { noop } from 'st-utils';
-import { describe, it, expect } from 'vitest';
 
 import { isClass } from './util';
 
