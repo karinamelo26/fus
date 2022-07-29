@@ -1,6 +1,7 @@
 import { isFunction } from 'st-utils';
 import { Class } from 'type-fest';
 
+import { resolveProvider } from '../api/module';
 import { ReflectMetadataTypesEnum } from '../util/reflect-metadata-types.enum';
 
 import { Inject } from './inject';
@@ -83,6 +84,7 @@ export class Injector {
   }
 
   addProvider(provider: Provider): this {
+    provider = resolveProvider(provider);
     this._providers.set(provider.provide, provider);
     return this;
   }

@@ -78,7 +78,8 @@
     "typescript": "~4.7.4",
     "vite": "~3.0.3",
     "vite-plugin-electron-renderer": "~0.8.1",
-    "vitest": "~0.19.1"
+    "vitest": "~0.19.1",
+    "vitest-mock-extended": "~0.1.12"
   },
   "prisma": {
     "schema": "./electron/main/prisma/schema.prisma"
