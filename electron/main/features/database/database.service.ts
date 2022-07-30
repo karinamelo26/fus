@@ -15,7 +15,7 @@ export class DatabaseService {
       orderBy: { createdAt: 'asc' },
     });
     return databases.map(database => ({
-      active: !!database.inactiveAt,
+      active: !database.inactiveAt,
       createdAt: database.createdAt,
       idDatabase: database.id,
       name: database.name,

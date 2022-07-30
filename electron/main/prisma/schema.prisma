@@ -8,7 +8,7 @@ datasource db {
 }
 
 model Database {
-  id         String     @id @default(uuid())
+  id         String    @id @default(uuid())
   name       String
   host       String
   port       Int
@@ -18,18 +18,18 @@ model Database {
   /// 0 - MySQL
   /// 1 - MSSQL
   type       Int
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
   inactiveAt DateTime?
 
-  schedule   Schedule[]
+  schedule Schedule[]
 
   @@map("database")
 }
 
 model Schedule {
   id           String    @id @default(uuid())
-  description  String
+  name         String
   idDatabase   String
   query        String
   /// 1-7
@@ -47,7 +47,7 @@ model Schedule {
   updatedAt    DateTime  @updatedAt
   inactiveAt   DateTime?
 
-  database     Database  @relation(fields: [idDatabase], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  database     Database       @relation(fields: [idDatabase], references: [id], onDelete: NoAction, onUpdate: NoAction)
   queryHistory QueryHistory[]
 
   @@map("schedule")
