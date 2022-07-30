@@ -6,7 +6,10 @@ import { Module } from '../api/module';
   providers: [
     {
       provide: PrismaClient,
-      useFactory: () => new PrismaClient(),
+      useFactory: () =>
+        new PrismaClient({
+          log: ['error', 'query', 'info', 'warn'],
+        }),
     },
   ],
 })

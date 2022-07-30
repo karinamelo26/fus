@@ -1,13 +1,12 @@
 import { isFunction } from 'st-utils';
 import { Class } from 'type-fest';
 
-import { resolveProvider } from '../api/module';
 import { ReflectMetadataTypesEnum } from '../util/reflect-metadata-types.enum';
 
 import { Inject } from './inject';
 import { Injectable } from './injectable';
 import { InjectionToken } from './injection-token';
-import { ClassProvider, FactoryProvider, Provider, ValueProvider } from './provider';
+import { ClassProvider, FactoryProvider, Provider, resolveProvider, ValueProvider } from './provider';
 
 function stringifyTarget(target: any): string {
   return isFunction(target) ? target.name : `${target}`;
