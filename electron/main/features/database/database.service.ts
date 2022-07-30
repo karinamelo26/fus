@@ -1,5 +1,8 @@
 import { Injectable } from '../../di/injectable';
+import { fromEnumToIdName } from '../../shared/from-enum-to-id-name';
+import { IdNameViewModel } from '../../shared/view-model/id-name.view-model';
 
+import { DatabaseTypeEnum } from './database-type.enum';
 import { DatabaseRepository } from './database.repository';
 import { GetAllDto } from './dto/get-all.dto';
 import { DatabaseViewModel } from './view-model/database.view-model';
@@ -22,5 +25,9 @@ export class DatabaseService {
       host: database.host,
       scheduleCount: database._count.schedule,
     }));
+  }
+
+  getTypes(): IdNameViewModel[] {
+    return fromEnumToIdName(DatabaseTypeEnum);
   }
 }

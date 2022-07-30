@@ -7,7 +7,7 @@ export const App = () => {
   async function set() {
     /* eslint-disable */
     console.time('api-call');
-    await api('schedule/get-all', { active: true }).then(console.log).catch(console.error);
+    await api('database/get-types', { active: true }).then(console.log).catch(console.error);
     console.timeEnd('api-call');
     /* eslint-enable */
   }
