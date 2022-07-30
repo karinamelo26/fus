@@ -1,11 +1,5 @@
-import { resolveProvider } from '../api/module';
-
-import { injector } from './injector';
+import { FactoryProvider } from './provider';
 
 export class InjectionToken<T> {
-  constructor(public readonly provider?: { useFactory: (...args: any[]) => T; deps?: any[] }) {
-    if (provider) {
-      injector.addProvider(resolveProvider({ ...provider, provide: this }));
-    }
-  }
+  constructor(public readonly provider?: Omit<FactoryProvider<T>, 'provide'>) {}
 }

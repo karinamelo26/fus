@@ -1,7 +1,8 @@
 import { isFunction } from 'st-utils';
 import { Class } from 'type-fest';
 
-import { ReflectMetadataTypes } from '../util/reflect';
+import { resolveProvider } from '../api/module';
+import { ReflectMetadataTypesEnum } from '../util/reflect-metadata-types.enum';
 
 import { Inject } from './inject';
 import { Injectable } from './injectable';
@@ -13,7 +14,7 @@ function stringifyTarget(target: any): string {
 }
 
 export class Injector {
-  constructor() {
+  private constructor() {
     this._instances.set(Injector, this);
   }
 
@@ -27,7 +28,8 @@ export class Injector {
 
   private async _resolveClassProvider<T>(provider: ClassProvider): Promise<T> {
     const injectParams = Inject.getAllForTarget(provider.useClass);
-    const reflectParams: Class<any>[] = Reflect.getMetadata(ReflectMetadataTypes.paramTypes, provider.useClass) ?? [];
+    const reflectParams: Class<any>[] =
+      Reflect.getMetadata(ReflectMetadataTypesEnum.paramTypes, provider.useClass) ?? [];
     const params = reflectParams.map((param, index) => injectParams[index]?.typeFn() ?? param);
     if (!params.length) {
       const instance = new provider.useClass();
@@ -69,14 +71,20 @@ export class Injector {
     if (this._instances.has(target)) {
       return this._instances.get(target)!;
     }
-    const provider = this._providers.get(target);
+    let provider = this._providers.get(target);
     if (!provider) {
-      throw new Error(`"${stringifyTarget(target)}" is not provided globally nor is provided by the providers`);
+      if (target instanceof InjectionToken && target.provider) {
+        provider = new FactoryProvider(target, target.provider.useFactory, target.provider.deps);
+        this.addProvider(provider);
+      } else {
+        throw new Error(`"${stringifyTarget(target)}" is not provided globally nor is provided by the providers`);
+      }
     }
     return this._resolveProvider(provider);
   }
 
   addProvider(provider: Provider): this {
+    provider = resolveProvider(provider);
     this._providers.set(provider.provide, provider);
     return this;
   }
@@ -116,6 +124,8 @@ export class Injector {
     }
     return this;
   }
-}
 
-export const injector = new Injector();
+  static create(): Injector {
+    return new Injector();
+  }
+}

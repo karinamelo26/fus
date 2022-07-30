@@ -20,6 +20,7 @@
     "outDir": "dist",
     "sourceMap": true,
     "declaration": false,
+    "types": ["vitest/globals"]
   },
-  "include": ["vite.config.ts", "package.json", "electron", "scripts"]
+  "include": ["vitest.config.ts", "vite.config.ts", "package.json", "electron", "scripts", "vitest.setup.ts"]
 }

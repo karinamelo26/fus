@@ -1,4 +1,4 @@
-import { ReflectMetadataTypes } from '../util/reflect';
+import { ReflectMetadataTypesEnum } from '../util/reflect-metadata-types.enum';
 
 import { Controller } from './controller';
 
@@ -10,7 +10,7 @@ export interface DataOptions {
 
 export function Data(options?: DataOptions): ParameterDecorator {
   return (target, propertyKey, parameterIndex) => {
-    const reflectType = Reflect.getMetadata(ReflectMetadataTypes.paramTypes, target, propertyKey)?.[parameterIndex];
+    const reflectType = Reflect.getMetadata(ReflectMetadataTypesEnum.paramTypes, target, propertyKey)?.[parameterIndex];
     Controller.upsertMethodMetadata(target.constructor, String(propertyKey), metadata => {
       metadata.parameters[parameterIndex] = {
         type: options?.type ?? reflectType,

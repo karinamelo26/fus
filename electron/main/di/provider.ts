@@ -10,18 +10,18 @@ export class ClassProvider extends ProviderBase {
   }
 }
 
-export class FactoryProvider extends ProviderBase {
+export class FactoryProvider<T = any> extends ProviderBase {
   constructor(
     provide: any,
-    public readonly useFactory: (...args: any[]) => any | Promise<any>,
+    public readonly useFactory: (...args: any[]) => T | Promise<T>,
     public readonly deps?: any[]
   ) {
     super(provide);
   }
 }
 
-export class ValueProvider extends ProviderBase {
-  constructor(provide: any, public readonly useValue: any) {
+export class ValueProvider<T = any> extends ProviderBase {
+  constructor(provide: any, public readonly useValue: T) {
     super(provide);
   }
 }

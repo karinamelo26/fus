@@ -1,8 +1,6 @@
-export interface InjectableOptions {
-  global?: boolean;
-  useFactory?: (...args: any[]) => any;
-  deps?: any[];
-}
+import { FactoryProvider } from './provider';
+
+export type InjectableOptions = { global?: boolean } & Partial<Omit<FactoryProvider, 'provide'>>;
 
 interface Injectable {
   (options?: InjectableOptions): ClassDecorator;
