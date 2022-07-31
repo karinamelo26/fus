@@ -25,4 +25,14 @@ export class ScheduleService {
       timer: getTimerText(schedule),
     }));
   }
+
+  async getCountActiveAndInactive(): Promise<[active: number, inactive: number]> {
+    const schedules = await this.scheduleRepository.findMany({
+      select: { inactiveAt: true },
+    });
+    return [
+      schedules.filter(schedule => !schedule.inactiveAt).length,
+      schedules.filter(schedule => schedule.inactiveAt).length,
+    ];
+  }
 }

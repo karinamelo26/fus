@@ -1,5 +1,6 @@
 import { performance } from 'perf_hooks';
 
+import { Prisma } from '@prisma/client';
 import { plainToInstance } from 'class-transformer';
 import { ipcMain, IpcMainInvokeEvent } from 'electron';
 import { isArray, isNil, isObject } from 'st-utils';
@@ -11,7 +12,7 @@ import { AnyObject } from '../util/any-object.type';
 import { formatPerformanceTime } from '../util/format-performance-time';
 
 import { Controller, ControllerMetadata, MethodMetadata } from './controller';
-import { BadRequestException, Exception, InternalServerErrorException } from './exception';
+import { BadRequestException, Exception, InternalServerErrorException, NotFoundException } from './exception';
 import { ModuleResolver } from './module-resolver';
 import { Response } from './response';
 import { validateData } from './validate-data';
@@ -65,9 +66,12 @@ export class Api {
         const data = await instance[methodMetadata.propertyKey](...argsFormatted);
         return new Response({ data, success: true, statusCode: methodMetadata.code });
       } catch (error) {
-        return error instanceof Exception
-          ? error
-          : new InternalServerErrorException(error?.message ?? error?.error ?? 'Unknown error');
+        if (error instanceof Exception) {
+          return error;
+        } else if (error instanceof Prisma.NotFoundError) {
+          return new NotFoundException(error.message);
+        }
+        return new InternalServerErrorException(error?.message ?? error?.error ?? 'Unknown error');
       }
     };
   }
