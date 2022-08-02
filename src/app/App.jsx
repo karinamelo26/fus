@@ -7,14 +7,15 @@ export const App = () => {
   async function set() {
     /* eslint-disable */
     console.time('api-call');
-    await api('database/add', {
-      name: 'Database 1',
-      host: 'localhost',
-      port: 3009,
-      username: 'root',
-      password: '12345',
-      database: 'main',
-      type: 0,
+    await api('schedule/add', {
+      name: 'Schedule 1',
+      idDatabase: '3f181d49-4513-4902-bc9e-1a5669a0d23d',
+      query: 'select * from table',
+      frequency: 0,
+      monthDay: 1,
+      hour: 0,
+      timeout: 30000,
+      sheet: 'Sheet1',
       active: true,
     })
       .then(console.log)

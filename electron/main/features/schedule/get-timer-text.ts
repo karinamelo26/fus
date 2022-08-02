@@ -1,14 +1,12 @@
 import { Schedule } from '@prisma/client';
 
-export function getTimerText(schedule: Schedule): string {
-  if (schedule.monthDay && schedule.hour) {
-    return 'Once a month';
-  }
-  if (schedule.weekDay && schedule.hour) {
-    return 'Once a week';
-  }
-  if (schedule.hour) {
-    return 'Everyday';
-  }
-  return 'Unknown';
+import { ScheduleFrequencyEnum } from './schedule-frequency.enum';
+
+const map = new Map<ScheduleFrequencyEnum, string>()
+  .set(ScheduleFrequencyEnum.Monthly, 'Once a month')
+  .set(ScheduleFrequencyEnum.Weekly, 'Once a week')
+  .set(ScheduleFrequencyEnum.Daily, 'Everyday');
+
+export function getTimerText(schedule: Pick<Schedule, 'frequency'>): string {
+  return map.get(schedule.frequency) ?? 'Unknown';
 }
