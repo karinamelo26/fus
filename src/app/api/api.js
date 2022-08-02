@@ -1,3 +1,5 @@
+import { dateInterceptor } from './date.interceptor';
+
 /**
  * @typedef {object} Response
  * @property {number} statusCode
@@ -20,6 +22,45 @@ async function resolveApi() {
 }
 
 /**
+ * @typedef {object} Request
+ * @property {string} path
+ * @property {any[]} [data]
+ */
+
+/**
+ * @typedef {(req: Request) => Request} RequestInterceptor
+ */
+
+/**
+ * @typedef {(res: any) => any} ResponseInterceptor
+ */
+
+/**
+ * @typedef {object} Interceptor
+ * @property {RequestInterceptor} [request]
+ * @property {ResponseInterceptor} [response]
+ */
+
+/**
+ * @type {Interceptor[]}
+ */
+const interceptors = [dateInterceptor()];
+
+/**
+ * @type {RequestInterceptor[]}
+ */
+const requestInterceptors = interceptors
+  .filter(interceptor => interceptor.request)
+  .map(interceptor => interceptor.request);
+
+/**
+ * @type {ResponseInterceptor[]}
+ */
+const responseInterceptor = interceptors
+  .filter(interceptor => interceptor.response)
+  .map(interceptor => interceptor.response);
+
+/**
  *
  * @param {string} path
  * @param {any} data
@@ -39,7 +80,8 @@ export async function api(path, ...data) {
       data: null,
     };
   }
-  const method = apiInternal[path];
+  const req = requestInterceptors.reduce((acc, item) => item(acc), { path, data });
+  const method = apiInternal[req.path];
   if (!method) {
     result = {
       success: false,
@@ -49,7 +91,8 @@ export async function api(path, ...data) {
     };
   } else {
     try {
-      result = await method(...data);
+      const originalResult = await method(...req.data);
+      result = responseInterceptor.reduce((acc, item) => item(acc), originalResult);
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error(error);

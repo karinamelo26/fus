@@ -4,6 +4,7 @@ import { Method } from '../../api/method';
 import { IdNameViewModel } from '../../shared/view-model/id-name.view-model';
 
 import { DatabaseService } from './database.service';
+import { AddDto } from './dto/add.dto';
 import { GetAllSummaryDto } from './dto/get-all-summary.dto';
 import { GetAllDto } from './dto/get-all.dto';
 import { GetSummaryDto } from './dto/get-summary.dto';
@@ -33,5 +34,10 @@ export class DatabaseController {
   @Method('get-all-summary')
   async getAllSummary(@Data() dto: GetAllSummaryDto): Promise<DatabaseAllSummaryViewModel> {
     return this.databaseService.getAllSummary(dto);
+  }
+
+  @Method('add')
+  async add(@Data() dto: AddDto): Promise<DatabaseViewModel> {
+    return this.databaseService.add(dto);
   }
 }

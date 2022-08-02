@@ -1,5 +1,5 @@
 import styles from '@styles/app.module.scss';
-import { api } from './api';
+import { api } from './api/api';
 import { Button } from '@mui/material';
 import { Delete } from '@mui/icons-material';
 
@@ -7,7 +7,16 @@ export const App = () => {
   async function set() {
     /* eslint-disable */
     console.time('api-call');
-    await api('database/get-all-summary', { idDatabase: '9cf8be50-9992-4c29-9300-a9bb8bbee2af', daysPrior: 7 })
+    await api('database/add', {
+      name: 'Database 1',
+      host: 'localhost',
+      port: 3009,
+      username: 'root',
+      password: '12345',
+      database: 'main',
+      type: 0,
+      active: true,
+    })
       .then(console.log)
       .catch(console.error);
     console.timeEnd('api-call');

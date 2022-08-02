@@ -106,12 +106,10 @@ export class Api {
 
   async init(): Promise<this> {
     const startMs = performance.now();
-    this._logger.log('Initializing API');
     await this.moduleResolver.resolveAll();
     const controllers = this.moduleResolver.getControllers();
     await this._initControllers(controllers);
-    const endMs = performance.now();
-    this._logger.log('API Initialized', ...formatPerformanceTime(startMs, endMs));
+    this._logger.log('API Initialized', ...formatPerformanceTime(startMs, performance.now()));
     return this;
   }
 

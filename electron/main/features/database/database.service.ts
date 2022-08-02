@@ -6,6 +6,7 @@ import { ScheduleService } from '../schedule/schedule.service';
 
 import { DatabaseTypeEnum } from './database-type.enum';
 import { DatabaseRepository } from './database.repository';
+import { AddDto } from './dto/add.dto';
 import { GetAllSummaryDto } from './dto/get-all-summary.dto';
 import { GetAllDto } from './dto/get-all.dto';
 import { GetSummaryDto } from './dto/get-summary.dto';
@@ -68,6 +69,30 @@ export class DatabaseService {
       scheduleActiveCount: activeCount,
       scheduleInactiveCount: inactiveCount,
       ...generateMetricsQueriesHistory(queriesHistory),
+    };
+  }
+
+  async add(dto: AddDto): Promise<DatabaseViewModel> {
+    const database = await this.databaseRepository.create({
+      select: { id: true, name: true, host: true, inactiveAt: true, createdAt: true },
+      data: {
+        name: dto.name,
+        host: dto.host,
+        database: dto.database,
+        username: dto.username,
+        port: dto.port,
+        password: dto.password,
+        type: dto.type,
+        inactiveAt: dto.active ? null : new Date(),
+      },
+    });
+    return {
+      idDatabase: database.id,
+      name: database.name,
+      host: database.host,
+      active: !database.inactiveAt,
+      createdAt: database.createdAt,
+      scheduleCount: 0,
     };
   }
 }
