@@ -1,7 +1,6 @@
 import { Class } from 'type-fest';
 
-import { ClassProvider, FactoryProvider, isProvider, Provider, ValueProvider } from '../di/provider';
-import { isClass } from '../util/util';
+import { Provider } from '../di/provider';
 
 import { ModuleWithProviders } from './module-with-providers';
 
@@ -24,31 +23,8 @@ const setMetadata: Module['setMetadata'] = (target, options) => {
 };
 const getMetadata: Module['getMetadata'] = target => metadataStore.get(target) ?? null;
 
-export function resolveProvider(possibleProvider: Provider | Class<any>): Provider {
-  if (isProvider(possibleProvider)) {
-    return possibleProvider;
-  }
-  if (isClass(possibleProvider)) {
-    return new ClassProvider(possibleProvider, possibleProvider);
-  }
-  const providerObject: Partial<ValueProvider & ClassProvider & FactoryProvider> = possibleProvider;
-  if (providerObject.useValue) {
-    return new ValueProvider(providerObject.provide, providerObject.useValue);
-  }
-  if (providerObject.useClass) {
-    return new ClassProvider(providerObject.provide, providerObject.useClass);
-  }
-  if (providerObject.useFactory) {
-    return new FactoryProvider(providerObject.provide, providerObject.useFactory, providerObject.deps);
-  }
-  throw new Error(`Provider ${JSON.stringify(providerObject)} is not correct`);
-}
-
 function ModuleInternal(options: ModuleOptions): ClassDecorator {
   return target => {
-    if (options.providers?.length) {
-      options = { ...options, providers: [...options.providers].map(resolveProvider) };
-    }
     setMetadata(target, options);
   };
 }

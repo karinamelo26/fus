@@ -10,18 +10,19 @@ interface Inject {
   getAllForTarget(target: any): (InjectMetadata | undefined)[];
 }
 
+const MapParameter = Map<number, InjectMetadata>;
 const metadataStore = new Map<any, Map<number, InjectMetadata>>();
 
 const setMetadata: Inject['setMetadata'] = (target, index, metadata) => {
   let classStored = metadataStore.get(target);
   if (!classStored) {
-    classStored = new Map();
+    classStored = new MapParameter();
     metadataStore.set(target, classStored);
   }
   classStored.set(index, metadata);
 };
 const getAllForTarget: Inject['getAllForTarget'] = target => {
-  const classStored = metadataStore.get(target) ?? new Map();
+  const classStored = metadataStore.get(target) ?? new MapParameter();
   const array: (InjectMetadata | undefined)[] = [];
   for (const [index, metadata] of classStored) {
     array[index] = metadata;
