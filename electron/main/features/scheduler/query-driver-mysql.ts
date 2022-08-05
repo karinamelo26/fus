@@ -32,8 +32,19 @@ export class QueryDriverMySQL extends QueryDriver {
     });
   }
 
-  async query<T = any>(query: string, params: any[]): Promise<T[]> {
-    const connection = await this._createConnection();
+  private _closeConnection(connection: Connection): Promise<void> {
+    return new Promise((resolve, reject) => {
+      connection.end(error => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        resolve();
+      });
+    });
+  }
+
+  private _query<T = any>(connection: Connection, query: string, params: any[]): Promise<T[]> {
     return new Promise((resolve, reject) => {
       connection.query(query, params, (errors, results) => {
         if (errors) {
@@ -43,5 +54,13 @@ export class QueryDriverMySQL extends QueryDriver {
         resolve(results);
       });
     });
+  }
+
+  // TODO error handling
+  async query<T = any>(query: string, params: any[]): Promise<T[]> {
+    const connection = await this._createConnection();
+    const results = await this._query(connection, query, params);
+    await this._closeConnection(connection);
+    return results;
   }
 }
