@@ -6,6 +6,7 @@ import { ipcMain, IpcMainInvokeEvent } from 'electron';
 import { isArray, isNil, isObject } from 'st-utils';
 import { Class } from 'type-fest';
 
+import { InjectionToken } from '../di/injection-token';
 import { Injector } from '../di/injector';
 import { Logger } from '../logger/logger';
 import { AnyObject } from '../util/any-object.type';
@@ -102,6 +103,12 @@ export class Api {
 
   getPaths(): string[] {
     return [...this._paths];
+  }
+
+  get<T>(target: InjectionToken<T>): T;
+  get<T>(target: Class<T>): T;
+  get<T>(target: any): T {
+    return this.injector.get(target);
   }
 
   async init(): Promise<this> {

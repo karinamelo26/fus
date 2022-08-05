@@ -1,4 +1,5 @@
 import { Injectable } from '../../di/injectable';
+import { SchedulersService } from '../scheduler/schedulers.service';
 
 import { AddDto } from './dto/add.dto';
 import { GetAllDto } from './dto/get-all.dto';
@@ -8,7 +9,15 @@ import { ScheduleViewModel } from './view-model/schedule.view-model';
 
 @Injectable({ global: true })
 export class ScheduleService {
-  constructor(private readonly scheduleRepository: ScheduleRepository) {}
+  constructor(
+    private readonly scheduleRepository: ScheduleRepository,
+    private readonly schedulersService: SchedulersService
+  ) {}
+
+  async init(): Promise<void> {
+    const schedules = await this.scheduleRepository.findMany({ include: { database: true } });
+    this.schedulersService.addSchedulers(schedules);
+  }
 
   async getAll(dto: GetAllDto): Promise<ScheduleViewModel[]> {
     const schedules = await this.scheduleRepository.findMany({
@@ -57,17 +66,12 @@ export class ScheduleService {
         weekDay: dto.weekDay,
         frequency: dto.frequency,
         inactiveAt: dto.active ? null : new Date(),
+        filePath: dto.filePath,
+        sheet: dto.sheet,
       },
-      select: {
-        name: true,
-        inactiveAt: true,
-        id: true,
-        idDatabase: true,
-        updatedAt: true,
-        frequency: true,
-        database: { select: { name: true } },
-      },
+      include: { database: true },
     });
+    this.schedulersService.addScheduler(schedule);
     return {
       name: schedule.name,
       active: !schedule.inactiveAt,

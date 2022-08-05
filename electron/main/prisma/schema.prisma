@@ -43,6 +43,9 @@ model Schedule {
   /// 2 - Daily
   frequency  Int
   timeout    Int       @default(30000)
+  sheet String
+  filePath String
+
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
   inactiveAt DateTime?
