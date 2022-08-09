@@ -53,6 +53,7 @@ model Schedule {
   database     Database       @relation(fields: [idDatabase], references: [id], onDelete: NoAction, onUpdate: NoAction)
   queryHistory QueryHistory[]
 
+  @@index(fields: [idDatabase])
   @@map("schedule")
 }
 
@@ -73,5 +74,6 @@ model QueryHistory {
 
   schedule Schedule @relation(fields: [idSchedule], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index(fields: [idSchedule])
   @@map("query_history")
 }

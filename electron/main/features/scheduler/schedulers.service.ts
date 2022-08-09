@@ -38,6 +38,7 @@ export class SchedulersService {
     const databaseDriver = this._getOrCreateDatabaseDriver(schedule.database);
     const scheduler = new Scheduler(schedule, this.queryHistoryService, databaseDriver);
     if (!schedule.inactiveAt) {
+      this._logger.log(`Starting schedule [${schedule.id}]`);
       scheduler.start();
     }
     this._schedulersMap.set(schedule.id, scheduler);

@@ -8,9 +8,11 @@ import { QueryDriverMSSQL } from './query-driver-mssql';
 import { QueryDriverMySQL } from './query-driver-mysql';
 
 export class DatabaseDriver {
-  constructor(private readonly database: Database) {}
+  constructor(private readonly database: Database) {
+    this._queryDriver = this._getQueryDriver();
+  }
 
-  private readonly _queryDriver = this._getQueryDriver();
+  private readonly _queryDriver: QueryDriver;
 
   private _getQueryDriver(): QueryDriver {
     const queryDriver = DatabaseDriver._mapQueryDrivers.get(this.database.type);

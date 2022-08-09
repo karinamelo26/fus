@@ -1,9 +1,11 @@
 import { Schedule } from '@prisma/client';
 import { CronJob } from 'cron';
 import { Workbook, Worksheet } from 'exceljs';
-import { orderBy } from 'st-utils';
+import { orderBy, round } from 'st-utils';
 
 import { Logger } from '../../logger/logger';
+import { formatPerformanceTime } from '../../util/format-performance-time';
+import { QueryHistoryCodeEnum } from '../query-history/query-history-code.enum';
 import { QueryHistoryService } from '../query-history/query-history.service';
 
 import { DatabaseDriver } from './database-driver';
@@ -16,10 +18,11 @@ export class Scheduler {
     private readonly databaseDriver: DatabaseDriver
   ) {
     this._cron = new CronJob(getCronTime(schedule), () => this._execute());
+    this._logger = Logger.create(`Scheduler [${this.idSchedule}]`);
   }
 
   private readonly _cron: CronJob;
-  private readonly _logger = Logger.create(`Scheduler [${this.idSchedule}]`);
+  private readonly _logger: Logger;
 
   get idSchedule(): string {
     return this.schedule.id;
@@ -45,6 +48,7 @@ export class Scheduler {
   private async _updateExcel(data: any[]): Promise<void> {
     const worksheet = await this._resetWorksheet();
     if (!data.length) {
+      this._logger.warn('No database data found');
       await worksheet.workbook.xlsx.writeFile(this.schedule.filePath);
       return;
     }
@@ -66,8 +70,24 @@ export class Scheduler {
   }
 
   private async _execute(): Promise<void> {
+    this._logger.log('Executing');
+    this._logger.log('Getting database data');
+    const startMs = performance.now();
     const data = await this.databaseDriver.query(this.schedule.query, []);
+    this._logger.log('Finished executing database query', ...formatPerformanceTime(startMs, performance.now()));
+    const queryTime = round(performance.now() - startMs);
+    this._logger.log('Updating excel');
+    const startMsExcel = performance.now();
     await this._updateExcel(data);
+    this._logger.log('Finished updating excel', ...formatPerformanceTime(startMsExcel, performance.now()));
+    this._logger.log('Adding a row to query_history');
+    await this.queryHistoryService.add({
+      queryTime,
+      idSchedule: this.schedule.id,
+      query: this.schedule.query,
+      code: QueryHistoryCodeEnum.Success,
+    });
+    this._logger.log('Finished', ...formatPerformanceTime(startMs, performance.now()));
   }
 
   start(): this {
