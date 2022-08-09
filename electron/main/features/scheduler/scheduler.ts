@@ -17,7 +17,8 @@ export class Scheduler {
     private readonly queryHistoryService: QueryHistoryService,
     private readonly databaseDriver: DatabaseDriver
   ) {
-    this._cron = new CronJob(getCronTime(schedule), () => this._execute());
+    const cronTime = getCronTime(schedule);
+    this._cron = new CronJob(cronTime, () => this._execute());
     this._logger = Logger.create(`Scheduler [${this.idSchedule}]`);
   }
 
