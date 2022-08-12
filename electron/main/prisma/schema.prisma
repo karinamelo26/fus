@@ -28,23 +28,26 @@ model Database {
 }
 
 model Schedule {
-  id         String    @id @default(uuid())
-  name       String
-  idDatabase String
-  query      String
+  id                String  @id @default(uuid())
+  name              String
+  idDatabase        String
+  query             String
   /// 1-7
-  weekDay    Int?
+  weekDay           Int?
   /// 1-12
-  monthDay   Int?
+  monthDay          Int?
   /// 1-12
-  hour       Int
+  hour              Int
   /// 0 - Monthly
   /// 1 - Weekly
   /// 2 - Daily
-  frequency  Int
-  timeout    Int       @default(30000)
-  sheet String
-  filePath String
+  frequency         Int
+  timeout           Int     @default(30000)
+  sheet             String
+  filePath          String
+  temporaryFilename String?
+  /// Raw cronTime, use with caution
+  rawCronTime       String?
 
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt

@@ -1,8 +1,8 @@
 import { Database, Schedule } from '@prisma/client';
 
 import { Injectable } from '../../di/injectable';
+import { Injector } from '../../di/injector';
 import { Logger } from '../../logger/logger';
-import { QueryHistoryService } from '../query-history/query-history.service';
 
 import { DatabaseDriver } from './database-driver';
 import { Scheduler } from './scheduler';
@@ -11,7 +11,7 @@ export type ScheduleWithDatabase = Schedule & { database: Database };
 
 @Injectable({ global: true })
 export class SchedulersService {
-  constructor(private readonly queryHistoryService: QueryHistoryService) {}
+  constructor(private readonly injector: Injector) {}
 
   private readonly _logger = Logger.create(this);
   private readonly _schedulersMap = new Map<string, Scheduler>();
@@ -36,7 +36,7 @@ export class SchedulersService {
       return this._schedulersMap.get(schedule.id)!;
     }
     const databaseDriver = this._getOrCreateDatabaseDriver(schedule.database);
-    const scheduler = new Scheduler(schedule, this.queryHistoryService, databaseDriver);
+    const scheduler = new Scheduler(this.injector, schedule, databaseDriver);
     if (!schedule.inactiveAt) {
       this._logger.log(`Starting schedule [${schedule.id}]`);
       scheduler.start();

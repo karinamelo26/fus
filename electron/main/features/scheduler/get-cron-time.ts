@@ -3,6 +3,9 @@ import { Schedule } from '@prisma/client';
 import { ScheduleFrequencyEnum } from '../schedule/schedule-frequency.enum';
 
 export function getCronTime(schedule: Schedule): string {
+  if (schedule.rawCronTime) {
+    return schedule.rawCronTime;
+  }
   switch (schedule.frequency) {
     case ScheduleFrequencyEnum.Monthly:
       return `0 ${schedule.hour} ${schedule.monthDay} * *`;

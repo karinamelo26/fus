@@ -82,4 +82,11 @@ export class ScheduleService {
       timer: getTimerText(schedule),
     };
   }
+
+  async updateTemporaryFilename(idSchedule: string, temporaryFilename: string | null): Promise<void> {
+    await this.scheduleRepository.update({
+      where: { id: idSchedule },
+      data: { temporaryFilename },
+    });
+  }
 }
