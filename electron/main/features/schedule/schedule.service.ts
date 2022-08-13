@@ -3,6 +3,7 @@ import { SchedulersService } from '../scheduler/schedulers.service';
 
 import { AddDto } from './dto/add.dto';
 import { GetAllDto } from './dto/get-all.dto';
+import { UpdateDto } from './dto/update.dto';
 import { getTimerText } from './get-timer-text';
 import { ScheduleRepository } from './schedule.repository';
 import { ScheduleViewModel } from './view-model/schedule.view-model';
@@ -88,5 +89,30 @@ export class ScheduleService {
       where: { id: idSchedule },
       data: { temporaryFilename },
     });
+  }
+
+  async update({ idSchedule, ...dto }: UpdateDto): Promise<ScheduleViewModel> {
+    const schedule = await this.scheduleRepository.update({
+      where: { id: idSchedule },
+      data: { name: dto.name, query: dto.query },
+      select: {
+        name: true,
+        inactiveAt: true,
+        id: true,
+        idDatabase: true,
+        frequency: true,
+        updatedAt: true,
+        database: { select: { name: true } },
+      },
+    });
+    return {
+      name: schedule.name,
+      active: !schedule.inactiveAt,
+      idSchedule: schedule.id,
+      idDatabase: schedule.idDatabase,
+      databaseName: schedule.database.name,
+      lastUpdated: schedule.updatedAt,
+      timer: getTimerText(schedule),
+    };
   }
 }

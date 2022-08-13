@@ -1,5 +1,5 @@
-import { copyFile, open, readFile } from 'fs/promises';
-import { basename, join } from 'path';
+import { copyFile, open, readFile, rm } from 'fs/promises';
+import { basename, extname, join } from 'path';
 
 import { Schedule } from '@prisma/client';
 import { CronJob } from 'cron';
@@ -69,15 +69,14 @@ export class Scheduler {
   private async _createTemporaryFile(): Promise<string> {
     const { idDatabase, id, filePath } = this.schedule;
     const originalFilename = basename(filePath);
+    const extension = extname(originalFilename);
     const date = new Date().toISOString();
-    const filename = `${v4()}-${idDatabase}-${id}-${originalFilename}-${date}`;
+    const filename = `${v4()}-${idDatabase}-${id}-${originalFilename}-${date}${extension}`;
     this._logger.log(`Creating temporary file: ${filename}`);
     await this._scheduleService.updateTemporaryFilename(id, filename);
     this.schedule.temporaryFilename = filename;
     const temporaryFilePath = this._getTemporaryFilePath(filename);
     await copyFile(this.schedule.filePath, temporaryFilePath);
-    // TODO CHECK IF DIRECTORY EXISTS
-    // TODO CHECK FILENAME WITHOUT EXTENSION
     this._logger.log(`Temporary file created`);
     return temporaryFilePath;
   }
@@ -102,12 +101,20 @@ export class Scheduler {
   }
 
   private async _checkForTemporaryFile(): Promise<void> {
-    // TODO if temporaryfilename exists, we need to check if we can merge the temporary data to the real sheet
-    if (this.schedule.temporaryFilename) {
-      return;
-    }
+    // TODO figure out a way to update schedule when the database changes
+    // maybe maintain only the id here, and fetch everytime we need info
     const isFileLocked = await this._isFileLocked();
     if (!isFileLocked) {
+      if (this.schedule.temporaryFilename) {
+        await Promise.all([
+          rm(this._getTemporaryFilePath(this.schedule.temporaryFilename)),
+          this._scheduleService.updateTemporaryFilename(this.schedule.id, null),
+        ]);
+        this.schedule.temporaryFilename = null;
+      }
+      return;
+    }
+    if (this.schedule.temporaryFilename) {
       return;
     }
     await this._createTemporaryFile();
@@ -176,6 +183,7 @@ export class Scheduler {
       code: QueryHistoryCodeEnum.Success,
     });
     this._logger.log('Finished', ...formatPerformanceTime(startMs, performance.now()));
+    // TODO error handling
   }
 
   start(): this {

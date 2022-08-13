@@ -50,7 +50,9 @@ async function createWindow(): Promise<void> {
     await win.loadFile(indexHtml);
   } else {
     await win.loadURL(url);
-    win.webContents.openDevTools();
+    if (!win.webContents.isDevToolsOpened()) {
+      win.webContents.openDevTools();
+    }
   }
 
   const api = await bootstrap(ApiModule);
