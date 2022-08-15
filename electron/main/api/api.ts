@@ -30,6 +30,7 @@ export class Api {
   private readonly _paths: string[] = [];
 
   private _createHandler(
+    path: string,
     instance: any,
     methodMetadata: MethodMetadata
   ): (event: IpcMainInvokeEvent, ...args: unknown[]) => Promise<void> | any {
@@ -67,6 +68,7 @@ export class Api {
         const data = await instance[methodMetadata.propertyKey](...argsFormatted);
         return new Response({ data, success: true, statusCode: methodMetadata.code });
       } catch (error) {
+        this._logger.error(`Error on ${path}`, error);
         if (error instanceof Exception) {
           return error;
         } else if (error instanceof Prisma.NotFoundError) {
@@ -83,7 +85,7 @@ export class Api {
       const startMs = performance.now();
       const path = `${controllerMetadata.path}/${methodMetadata.path}`;
       this._paths.push(path);
-      ipcMain.handle(path, this._createHandler(instance, methodMetadata));
+      ipcMain.handle(path, this._createHandler(path, instance, methodMetadata));
       const endMs = performance.now();
       this._logger.log(`[${path}] Initialized`, ...formatPerformanceTime(startMs, endMs));
     }
