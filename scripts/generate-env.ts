@@ -2,7 +2,7 @@ import { readFile, writeFile } from 'fs/promises';
 import { homedir } from 'os';
 import { join } from 'path';
 
-import { pathExists } from './utils';
+import { pathExists } from '../electron/main/util/path-exists';
 
 const ENV_PATH = join(process.cwd(), '.env');
 const DATABASE_URL_KEY = 'DATABASE_URL';

@@ -1,9 +1,13 @@
 import { Database } from '@prisma/client';
 import { Connection, createConnection } from 'mysql';
+import { MysqlErrorCodes } from 'mysql-error-codes';
 
 import { DatabaseTypeEnum } from '../database/database-type.enum';
 
 import { QueryDriver } from './query-driver';
+import { QueryError } from './query-error';
+import { QueryErrorEnum } from './query-error.enum';
+import { QueryOptions } from './query-options';
 
 export class QueryDriverMySQL extends QueryDriver {
   constructor(private readonly database: Database) {
@@ -21,10 +25,10 @@ export class QueryDriverMySQL extends QueryDriver {
         user: this.database.username,
         password: this.database.password,
       });
-      connection.connect(err => {
+      connection.connect(error => {
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-        if (err) {
-          reject(err);
+        if (error) {
+          reject(new QueryError(QueryErrorEnum.ConnectionError, error.message));
           return;
         }
         resolve(connection);
@@ -36,7 +40,7 @@ export class QueryDriverMySQL extends QueryDriver {
     return new Promise((resolve, reject) => {
       connection.end(error => {
         if (error) {
-          reject(error);
+          reject(new QueryError(QueryErrorEnum.ConnectionError, error.message));
           return;
         }
         resolve();
@@ -44,11 +48,16 @@ export class QueryDriverMySQL extends QueryDriver {
     });
   }
 
-  private _query<T = any>(connection: Connection, query: string, params: any[]): Promise<T[]> {
+  private _query<T = any>(connection: Connection, query: string, options: QueryOptions): Promise<T[]> {
     return new Promise((resolve, reject) => {
-      connection.query(query, params, (errors, results) => {
-        if (errors) {
-          reject(errors);
+      connection.query({ sql: query, timeout: options.timeout }, (error, results) => {
+        if (error) {
+          let code = QueryErrorEnum.Unknown;
+          const message = error.message;
+          if (error.errno === MysqlErrorCodes.ER_QUERY_TIMEOUT) {
+            code = QueryErrorEnum.Timeout;
+          }
+          reject(new QueryError(code, message));
           return;
         }
         resolve(results);
@@ -56,11 +65,35 @@ export class QueryDriverMySQL extends QueryDriver {
     });
   }
 
-  // TODO error handling
-  async query<T = any>(query: string, params: any[]): Promise<T[]> {
-    const connection = await this._createConnection();
-    const results = await this._query(connection, query, params);
-    await this._closeConnection(connection);
-    return results;
+  async canConnect(): Promise<boolean> {
+    try {
+      const connection = await this._createConnection();
+      return new Promise((resolve, reject) => {
+        connection.ping(err => {
+          // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+          if (err) {
+            reject(err);
+            return;
+          }
+          resolve(true);
+        });
+      });
+    } catch {
+      return false;
+    }
+  }
+
+  async query<T = any>(query: string, options: QueryOptions): Promise<T[]> {
+    try {
+      const connection = await this._createConnection();
+      const results = await this._query(connection, query, options);
+      await this._closeConnection(connection);
+      return results;
+    } catch (error) {
+      if (error instanceof QueryError) {
+        throw error;
+      }
+      throw new QueryError(QueryErrorEnum.Unknown, `Unknown error: ${error.message}`);
+    }
   }
 }

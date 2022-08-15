@@ -6,6 +6,7 @@ import { DatabaseTypeEnum } from '../database/database-type.enum';
 import { QueryDriver } from './query-driver';
 import { QueryDriverMSSQL } from './query-driver-mssql';
 import { QueryDriverMySQL } from './query-driver-mysql';
+import { QueryOptions } from './query-options';
 
 export class DatabaseDriver {
   constructor(private readonly database: Database) {
@@ -22,8 +23,12 @@ export class DatabaseDriver {
     return new queryDriver(this.database);
   }
 
-  query<T = any>(query: string, params: any[]): Promise<T[]> {
-    return this._queryDriver.query(query, params);
+  canConnect(): Promise<boolean> {
+    return this._queryDriver.canConnect();
+  }
+
+  query<T = any>(query: string, options: QueryOptions): Promise<T[]> {
+    return this._queryDriver.query(query, options);
   }
 
   private static readonly _mapQueryDrivers = new Map<DatabaseTypeEnum, Class<QueryDriver, [Database]>>()

@@ -11,6 +11,7 @@ import { v4 } from 'uuid';
 import { Injector } from '../../di/injector';
 import { Logger } from '../../logger/logger';
 import { formatPerformanceTime } from '../../util/format-performance-time';
+import { pathExists } from '../../util/path-exists';
 import { ConfigService } from '../config/config.service';
 import { NotificationService } from '../notification/notification.service';
 import { QueryHistoryCodeEnum } from '../query-history/query-history-code.enum';
@@ -19,8 +20,9 @@ import { ScheduleService } from '../schedule/schedule.service';
 
 import { DatabaseDriver } from './database-driver';
 import { getCronTime } from './get-cron-time';
-
-import ErrnoException = NodeJS.ErrnoException;
+import { QueryError } from './query-error';
+import { queryErrorEnumToQueryHistoryCodeEnum } from './query-error-enum-to-query-history-code-enum';
+import { SchedulerError } from './scheduler-error';
 
 export class Scheduler {
   constructor(
@@ -92,7 +94,7 @@ export class Scheduler {
       await fileHandle.close();
       return false;
     } catch (_error) {
-      const error: ErrnoException = _error;
+      const error: NodeJS.ErrnoException = _error;
       if (error.code === 'EBUSY') {
         return true;
       }
@@ -159,31 +161,90 @@ export class Scheduler {
     await worksheet.workbook.xlsx.writeFile(this.schedule.filePath);
   }
 
-  private async _execute(): Promise<void> {
-    this._logger.log('Executing');
-    this._logger.log('Getting database data');
-    const startMs = performance.now();
-    await this._checkForTemporaryFile();
-    this._logger.log('Locking file');
-    const unlockFunction = await this._lockFile();
-    const data = await this.databaseDriver.query(this.schedule.query, []);
-    this._logger.log('Finished executing database query', ...formatPerformanceTime(startMs, performance.now()));
-    const queryTime = round(performance.now() - startMs);
-    const startMsExcel = performance.now();
-    this._logger.log('Unlocking file');
-    await unlockFunction();
-    this._logger.log('Updating excel');
-    await this._updateExcel(data);
-    this._logger.log('Finished updating excel', ...formatPerformanceTime(startMsExcel, performance.now()));
-    this._logger.log('Adding a row to query_history');
+  private async _assertFileExists(): Promise<void> {
+    const fileExists = await pathExists(this.schedule.filePath);
+    if (fileExists) {
+      return;
+    }
+    throw new SchedulerError(QueryHistoryCodeEnum.FileNotFound, 'File not found');
+  }
+
+  private async _getQueryResults(): Promise<any[]> {
+    try {
+      return await this.databaseDriver.query(this.schedule.query, { timeout: this.schedule.timeout });
+    } catch (error) {
+      let code = QueryHistoryCodeEnum.QueryError;
+      if (error instanceof QueryError) {
+        code = queryErrorEnumToQueryHistoryCodeEnum(error.code);
+      }
+      throw new SchedulerError(code, error?.message ?? 'Query error');
+    }
+  }
+
+  private async _assertConnection(): Promise<void> {
+    const canConnect = await this.databaseDriver.canConnect();
+    if (canConnect) {
+      return;
+    }
+    throw new SchedulerError(QueryHistoryCodeEnum.DatabaseNotAvailable, 'Could not connect to the database');
+  }
+
+  private async _handleKnownError(error: SchedulerError): Promise<void> {
     await this._queryHistoryService.add({
-      queryTime,
       idSchedule: this.schedule.id,
       query: this.schedule.query,
-      code: QueryHistoryCodeEnum.Success,
+      code: error.code,
+      message: error.message,
+      queryTime: 0,
     });
-    this._logger.log('Finished', ...formatPerformanceTime(startMs, performance.now()));
-    // TODO error handling
+  }
+
+  private async _handleError(error: Error): Promise<void> {
+    try {
+      if (error instanceof SchedulerError) {
+        return await this._handleKnownError(error);
+      }
+      return await this._handleKnownError(
+        new SchedulerError(QueryHistoryCodeEnum.Unknown, `Unknown error: ${error.message}`)
+      );
+    } catch (criticalError) {
+      this._logger.error('CRITICAL ERROR', criticalError);
+    }
+  }
+
+  private async _execute(): Promise<void> {
+    try {
+      this._logger.log('Executing');
+      this._logger.log('Getting database data');
+      const startMs = performance.now();
+      await this._assertFileExists();
+      await this._checkForTemporaryFile();
+      this._logger.log('Locking file');
+      const unlockFunction = await this._lockFile();
+      await this._assertConnection();
+      const startMsQuery = performance.now();
+      const data = await this._getQueryResults();
+      this._logger.log('Finished executing database query', ...formatPerformanceTime(startMs, performance.now()));
+      const queryTime = round(performance.now() - startMsQuery);
+      const startMsExcel = performance.now();
+      this._logger.log('Unlocking file');
+      await unlockFunction();
+      this._logger.log('Updating excel');
+      // TODO ERROR HANDLING
+      await this._updateExcel(data);
+      this._logger.log('Finished updating excel', ...formatPerformanceTime(startMsExcel, performance.now()));
+      this._logger.log('Adding a row to query_history');
+      // TODO ERROR HANDLING
+      await this._queryHistoryService.add({
+        queryTime,
+        idSchedule: this.schedule.id,
+        query: this.schedule.query,
+        code: QueryHistoryCodeEnum.Success,
+      });
+      this._logger.log('Finished', ...formatPerformanceTime(startMs, performance.now()));
+    } catch (error) {
+      await this._handleError(error);
+    }
   }
 
   start(): this {
