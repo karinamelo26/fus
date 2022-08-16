@@ -1,3 +1,5 @@
+import { Schedule } from '@prisma/client';
+
 import { Injectable } from '../../di/injectable';
 import { SchedulersService } from '../scheduler/schedulers.service';
 
@@ -43,6 +45,10 @@ export class ScheduleService {
       lastUpdated: schedule.updatedAt,
       timer: getTimerText(schedule),
     }));
+  }
+
+  async getOne(idSchedule: string): Promise<Schedule> {
+    return this.scheduleRepository.findFirstOrThrow({ where: { id: idSchedule } });
   }
 
   async getCountActiveAndInactive(): Promise<[active: number, inactive: number]> {

@@ -24,21 +24,22 @@ import { QueryError } from './query-error';
 import { queryErrorEnumToQueryHistoryCodeEnum } from './query-error-enum-to-query-history-code-enum';
 import { SchedulerError } from './scheduler-error';
 
+const _15_MINUTES_IN_MS = 900_000;
+
 export class Scheduler {
-  constructor(
-    injector: Injector,
-    private readonly schedule: Schedule,
-    private readonly databaseDriver: DatabaseDriver
-  ) {
+  constructor(injector: Injector, schedule: Schedule, private readonly databaseDriver: DatabaseDriver) {
+    this._cachedSchedule = schedule;
+    this._idSchedule = schedule.id;
     this._queryHistoryService = injector.get(QueryHistoryService);
     this._scheduleService = injector.get(ScheduleService);
     this._notificationService = injector.get(NotificationService);
     this._configService = injector.get(ConfigService);
-    this._logger = Logger.create(`Scheduler [${this.idSchedule}]`);
+    this._logger = Logger.create(`Scheduler [${this._idSchedule}]`);
     const cronTime = getCronTime(schedule);
     this._cron = new CronJob(cronTime, () => this._execute());
   }
 
+  private readonly _idSchedule: string;
   private readonly _cron: CronJob;
   private readonly _logger: Logger;
   private readonly _queryHistoryService: QueryHistoryService;
@@ -46,51 +47,60 @@ export class Scheduler {
   private readonly _notificationService: NotificationService;
   private readonly _configService: ConfigService;
 
-  get idSchedule(): string {
-    return this.schedule.id;
+  private _cachedSchedule: Schedule | null;
+  private _cachedScheduleTimer: NodeJS.Timeout | null = null;
+
+  private _resetCachedSchedule(): void {
+    this._cachedSchedule = null;
+    if (this._cachedScheduleTimer) {
+      clearTimeout(this._cachedScheduleTimer);
+    }
   }
 
-  get idDatabase(): string {
-    return this.schedule.idDatabase;
-  }
-
-  get isRunning(): boolean {
-    return !!this._cron.running;
+  private async _getSchedule(): Promise<Schedule> {
+    if (!this._cachedSchedule) {
+      this._cachedSchedule = await this._scheduleService.getOne(this._idSchedule);
+      this._cachedScheduleTimer = setTimeout(() => {
+        this._resetCachedSchedule();
+      }, _15_MINUTES_IN_MS);
+    }
+    return this._cachedSchedule;
   }
 
   private _getTemporaryFilePath(temporaryFilename: string): string {
     return join(this._configService.TEMPORARY_FILES_PATH, temporaryFilename);
   }
 
-  private _getFilePath(): string {
-    return this.schedule.temporaryFilename
-      ? this._getTemporaryFilePath(this.schedule.temporaryFilename)
-      : this.schedule.filePath;
+  private async _getFilePath(): Promise<string> {
+    const schedule = await this._getSchedule();
+    return schedule.temporaryFilename ? this._getTemporaryFilePath(schedule.temporaryFilename) : schedule.filePath;
   }
 
   private async _createTemporaryFile(): Promise<string> {
-    const { idDatabase, id, filePath } = this.schedule;
+    const { idDatabase, id, filePath } = await this._getSchedule();
     const originalFilename = basename(filePath);
     const extension = extname(originalFilename);
     const date = new Date().toISOString();
     const filename = `${v4()}-${idDatabase}-${id}-${originalFilename}-${date}${extension}`;
     this._logger.log(`Creating temporary file: ${filename}`);
     await this._scheduleService.updateTemporaryFilename(id, filename);
-    this.schedule.temporaryFilename = filename;
+    this._resetCachedSchedule();
     const temporaryFilePath = this._getTemporaryFilePath(filename);
-    await copyFile(this.schedule.filePath, temporaryFilePath);
+    await copyFile(filePath, temporaryFilePath);
     this._logger.log(`Temporary file created`);
     return temporaryFilePath;
   }
 
   private async _lockFile(): Promise<() => Promise<void>> {
-    const filePath = this._getFilePath();
-    return lock(filePath, { stale: this.schedule.timeout * 1.15 });
+    const filePath = await this._getFilePath();
+    const { timeout } = await this._getSchedule();
+    return lock(filePath, { stale: timeout * 1.15 });
   }
 
   private async _isFileLocked(): Promise<boolean> {
     try {
-      const fileHandle = await open(this.schedule.filePath, 'r+');
+      const { filePath } = await this._getSchedule();
+      const fileHandle = await open(filePath, 'r+');
       await fileHandle.close();
       return false;
     } catch (_error) {
@@ -103,45 +113,61 @@ export class Scheduler {
   }
 
   private async _checkForTemporaryFile(): Promise<void> {
-    // TODO figure out a way to update schedule when the database changes
-    // maybe maintain only the id here, and fetch everytime we need info
+    this._logger.log('Checking for temporary file');
+    let { id, temporaryFilename } = await this._getSchedule();
     const isFileLocked = await this._isFileLocked();
+    this._logger.log(`File is locked: ${isFileLocked}`);
+    if (temporaryFilename) {
+      const fileExists = await pathExists(this._getTemporaryFilePath(temporaryFilename));
+      if (!fileExists) {
+        this._logger.log(
+          'Temporary file found on database, but actual file does not exists. Updating the database to null'
+        );
+        await this._scheduleService.updateTemporaryFilename(id, null);
+        this._resetCachedSchedule();
+        temporaryFilename = null;
+      }
+    }
     if (!isFileLocked) {
-      if (this.schedule.temporaryFilename) {
+      if (temporaryFilename) {
+        this._logger.log('File is not locked, deleting temporary file and updating database to null');
         await Promise.all([
-          rm(this._getTemporaryFilePath(this.schedule.temporaryFilename)),
-          this._scheduleService.updateTemporaryFilename(this.schedule.id, null),
+          rm(this._getTemporaryFilePath(temporaryFilename)),
+          this._scheduleService.updateTemporaryFilename(id, null),
         ]);
-        this.schedule.temporaryFilename = null;
+        this._resetCachedSchedule();
+        temporaryFilename = null;
       }
       return;
     }
-    if (this.schedule.temporaryFilename) {
+    if (temporaryFilename) {
       return;
     }
     await this._createTemporaryFile();
   }
 
   private async _getFile(): Promise<Buffer> {
-    const filePath = this._getFilePath();
+    const filePath = await this._getFilePath();
     return readFile(filePath);
   }
 
   private async _resetWorksheet(): Promise<Worksheet> {
+    const { sheet } = await this._getSchedule();
     const file = await this._getFile();
     const workbook = await new Workbook().xlsx.load(file);
-    const worksheet = workbook.worksheets.find(_worksheet => _worksheet.name === this.schedule.sheet);
+    const worksheet = workbook.worksheets.find(_worksheet => _worksheet.name === sheet);
     if (worksheet) {
       workbook.removeWorksheetEx(worksheet);
     }
-    return workbook.addWorksheet(this.schedule.sheet);
+    return workbook.addWorksheet(sheet);
   }
 
   private async _updateExcel(data: any[]): Promise<void> {
+    const { filePath } = await this._getSchedule();
     const worksheet = await this._resetWorksheet();
     if (!data.length) {
       this._logger.warn('No database data found');
-      await worksheet.workbook.xlsx.writeFile(this.schedule.filePath);
+      await worksheet.workbook.xlsx.writeFile(filePath);
       return;
     }
     const columns = orderBy(Object.keys(data[0]));
@@ -158,11 +184,12 @@ export class Scheduler {
       }
       row.commit();
     }
-    await worksheet.workbook.xlsx.writeFile(this.schedule.filePath);
+    await worksheet.workbook.xlsx.writeFile(filePath);
   }
 
   private async _assertFileExists(): Promise<void> {
-    const fileExists = await pathExists(this.schedule.filePath);
+    const { filePath } = await this._getSchedule();
+    const fileExists = await pathExists(filePath);
     if (fileExists) {
       return;
     }
@@ -171,7 +198,8 @@ export class Scheduler {
 
   private async _getQueryResults(): Promise<any[]> {
     try {
-      return await this.databaseDriver.query(this.schedule.query, { timeout: this.schedule.timeout });
+      const { query, timeout } = await this._getSchedule();
+      return await this.databaseDriver.query(query, { timeout });
     } catch (error) {
       let code = QueryHistoryCodeEnum.QueryError;
       if (error instanceof QueryError) {
@@ -190,16 +218,18 @@ export class Scheduler {
   }
 
   private async _handleKnownError(error: SchedulerError): Promise<void> {
+    // TODO CHECK ENOENT TRYING TO COPY SHEETS TO TEMPORARY LOCATION
     this._logger.error('Failed: ', error.message);
+    const { id, query, name } = await this._getSchedule();
     await this._queryHistoryService.add({
-      idSchedule: this.schedule.id,
-      query: this.schedule.query,
+      idSchedule: id,
+      query,
       code: error.code,
       message: error.message,
       queryTime: 0,
     });
     this._notificationService.show({
-      title: `${this.schedule.name} failed to execute`,
+      title: `${name} failed to execute`,
       body: 'Please check the schedule page to view the error',
     });
   }
@@ -220,13 +250,13 @@ export class Scheduler {
   private async _execute(): Promise<void> {
     try {
       this._logger.log('Executing');
-      this._logger.log('Getting database data');
       const startMs = performance.now();
       await this._assertFileExists();
       await this._checkForTemporaryFile();
       this._logger.log('Locking file');
       const unlockFunction = await this._lockFile();
       await this._assertConnection();
+      this._logger.log('Getting database data');
       const startMsQuery = performance.now();
       const data = await this._getQueryResults();
       this._logger.log('Finished executing database query', ...formatPerformanceTime(startMs, performance.now()));
@@ -238,10 +268,11 @@ export class Scheduler {
       await this._updateExcel(data);
       this._logger.log('Finished updating excel', ...formatPerformanceTime(startMsExcel, performance.now()));
       this._logger.log('Adding a row to query_history');
+      const { id, query } = await this._getSchedule();
       await this._queryHistoryService.add({
         queryTime,
-        idSchedule: this.schedule.id,
-        query: this.schedule.query,
+        idSchedule: id,
+        query,
         code: QueryHistoryCodeEnum.Success,
       });
       this._logger.log('Finished', ...formatPerformanceTime(startMs, performance.now()));
