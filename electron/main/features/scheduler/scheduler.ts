@@ -190,12 +190,17 @@ export class Scheduler {
   }
 
   private async _handleKnownError(error: SchedulerError): Promise<void> {
+    this._logger.error('Failed: ', error.message);
     await this._queryHistoryService.add({
       idSchedule: this.schedule.id,
       query: this.schedule.query,
       code: error.code,
       message: error.message,
       queryTime: 0,
+    });
+    this._notificationService.show({
+      title: `${this.schedule.name} failed to execute`,
+      body: 'Please check the schedule page to view the error',
     });
   }
 
@@ -230,11 +235,9 @@ export class Scheduler {
       this._logger.log('Unlocking file');
       await unlockFunction();
       this._logger.log('Updating excel');
-      // TODO ERROR HANDLING
       await this._updateExcel(data);
       this._logger.log('Finished updating excel', ...formatPerformanceTime(startMsExcel, performance.now()));
       this._logger.log('Adding a row to query_history');
-      // TODO ERROR HANDLING
       await this._queryHistoryService.add({
         queryTime,
         idSchedule: this.schedule.id,

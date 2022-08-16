@@ -68,11 +68,11 @@ export class QueryDriverMySQL extends QueryDriver {
   async canConnect(): Promise<boolean> {
     try {
       const connection = await this._createConnection();
-      return new Promise((resolve, reject) => {
-        connection.ping(err => {
+      return await new Promise((resolve, reject) => {
+        connection.ping(error => {
           // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-          if (err) {
-            reject(err);
+          if (error) {
+            reject(error);
             return;
           }
           resolve(true);
