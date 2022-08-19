@@ -18,7 +18,7 @@ export class NotificationService {
     this._queue$
       .pipe(
         concatMap(notificationOptions =>
-          concat(of(notificationOptions), timer(TIME_CONSTANTS['15_MINUTES_IN_MS']).pipe(ignoreElements()))
+          concat(of(notificationOptions), timer(TIME_CONSTANTS['15_SECONDS_IN_MS']).pipe(ignoreElements()))
         )
       )
       .subscribe(config => {

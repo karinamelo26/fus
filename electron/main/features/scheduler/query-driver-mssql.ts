@@ -54,7 +54,7 @@ export class QueryDriverMSSQL extends QueryDriver {
 
   async canConnect(): Promise<boolean> {
     try {
-      const connection = await this._getConnection({ timeout: TIME_CONSTANTS['15_MINUTES_IN_MS'] });
+      const connection = await this._getConnection({ timeout: TIME_CONSTANTS['15_SECONDS_IN_MS'] });
       await connection.query('select 1');
       return true;
     } catch {

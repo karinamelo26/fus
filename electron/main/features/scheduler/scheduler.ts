@@ -6,7 +6,7 @@ import { CronJob } from 'cron';
 import { format } from 'date-fns';
 import { Workbook, Worksheet } from 'exceljs';
 import { check, lock, unlock } from 'proper-lockfile';
-import { orderBy, round } from 'st-utils';
+import { isNotNil, orderBy, round } from 'st-utils';
 import { v4 } from 'uuid';
 
 import { Injector } from '../../di/injector';
@@ -51,6 +51,7 @@ export class Scheduler {
 
   private _cachedSchedule: Schedule | null;
   private _cachedScheduleTimer: NodeJS.Timeout | null = null;
+  private _failedAttempts = 0;
 
   private _resetCachedSchedule(): void {
     this._cachedSchedule = null;
@@ -221,13 +222,14 @@ export class Scheduler {
 
   private async _handleKnownError(error: SchedulerError, mode: QueryHistoryModeEnum): Promise<void> {
     this._logger.error('Failed: ', error.message);
+    this._failedAttempts++;
     const filePath = await this._getFilePath();
     // Check if file is locked, if the error isn't file not found
     if (error.code !== QueryHistoryCodeEnum.FileNotFound && (await check(filePath))) {
       // If it is, try to unlock it
       await unlock(filePath);
     }
-    const { id, query, name } = await this._getSchedule();
+    const { id, query, name, failedAttemptsBeforeInactivation } = await this._getSchedule();
     await this._queryHistoryService.add({
       idSchedule: id,
       query,
@@ -236,12 +238,27 @@ export class Scheduler {
       queryTime: 0,
       mode,
     });
+    let bodyNotification = 'Please check the schedule page to view the error';
     if (error.code === QueryHistoryCodeEnum.FileNotFound) {
+      bodyNotification += '\nThis schedule is being inactivated because the file was not found';
       await this._scheduleService.inactivate(this._idSchedule, ScheduleInactiveCodeEnum.FileNotFound);
+    }
+    const isSqlRelatedError = new Set([
+      QueryHistoryCodeEnum.QueryError,
+      QueryHistoryCodeEnum.Timeout,
+      QueryHistoryCodeEnum.DatabaseNotAvailable,
+    ]).has(error.code);
+    if (
+      isSqlRelatedError &&
+      isNotNil(failedAttemptsBeforeInactivation) &&
+      this._failedAttempts >= failedAttemptsBeforeInactivation
+    ) {
+      bodyNotification += '\nThis schedule is being inactivated because is exceeded the maximum failed attempts';
+      await this._scheduleService.inactivate(this._idSchedule, ScheduleInactiveCodeEnum.QueryExecutionError);
     }
     this._notificationService.show({
       title: `${name} failed to execute`,
-      body: 'Please check the schedule page to view the error',
+      body: bodyNotification,
     });
   }
 
@@ -288,6 +305,7 @@ export class Scheduler {
         code: QueryHistoryCodeEnum.Success,
         mode,
       });
+      this._failedAttempts = 0;
       this._logger.log('Finished', ...formatPerformanceTime(startMs, performance.now()));
     } catch (error) {
       await this._handleError(error, mode);
