@@ -48,6 +48,11 @@ model Schedule {
   temporaryFilename String?
   /// Raw cronTime, use with caution
   rawCronTime       String?
+  /// 0 - Inactivated by user
+  /// 1 - File not found
+  /// 2 - Query execution error
+  inactiveCode      Int?
+
 
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
@@ -61,16 +66,22 @@ model Schedule {
 }
 
 model QueryHistory {
-  id         String    @id @default(uuid())
+  id         String  @id @default(uuid())
   idSchedule String
   query      String
   /// 0 - Success
   /// 1 - Timeout
   /// 2 - Database not available
   /// 3 - Query error
+  /// 4 - File not found
+  /// 5 - Unknown
   code       Int
   message    String?
   queryTime  Float
+  /// 0 - Scheduled
+  /// 1 - Manual
+  mode       Int
+
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
   inactiveAt DateTime?

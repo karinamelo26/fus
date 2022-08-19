@@ -4,6 +4,7 @@ import { NotFoundException } from '../../api/exception';
 import { Injectable } from '../../di/injectable';
 import { Injector } from '../../di/injector';
 import { Logger } from '../../logger/logger';
+import { QueryHistoryModeEnum } from '../query-history/query-history-mode.enum';
 
 import { DatabaseDriver } from './database-driver';
 import { Scheduler } from './scheduler';
@@ -69,6 +70,6 @@ export class SchedulersService {
     if (!scheduler) {
       throw new NotFoundException(`Scheduler with id [${idSchedule}] not found`);
     }
-    await scheduler.execute();
+    await scheduler.execute(QueryHistoryModeEnum.Manual);
   }
 }

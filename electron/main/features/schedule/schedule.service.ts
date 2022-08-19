@@ -1,5 +1,6 @@
 import { Schedule } from '@prisma/client';
 
+import { BadRequestException } from '../../api/exception';
 import { Injectable } from '../../di/injectable';
 import { SchedulersService } from '../scheduler/schedulers.service';
 
@@ -7,6 +8,7 @@ import { AddDto } from './dto/add.dto';
 import { GetAllDto } from './dto/get-all.dto';
 import { UpdateDto } from './dto/update.dto';
 import { getTimerText } from './get-timer-text';
+import { ScheduleInactiveCodeEnum } from './schedule-inactive-code.enum';
 import { ScheduleRepository } from './schedule.repository';
 import { ScheduleViewModel } from './view-model/schedule.view-model';
 
@@ -16,6 +18,16 @@ export class ScheduleService {
     private readonly scheduleRepository: ScheduleRepository,
     private readonly schedulersService: SchedulersService
   ) {}
+
+  private async _assertScheduleNotInactive(idSchedule: string): Promise<void> {
+    const { inactiveAt } = await this.scheduleRepository.findFirstOrThrow({
+      where: { id: idSchedule },
+      select: { inactiveAt: true },
+    });
+    if (inactiveAt) {
+      throw new BadRequestException(`Schedule with id [${idSchedule}] is inactive`);
+    }
+  }
 
   async init(): Promise<void> {
     const schedules = await this.scheduleRepository.findMany({ include: { database: true } });
@@ -123,6 +135,33 @@ export class ScheduleService {
   }
 
   async execute(idSchedule: string): Promise<void> {
+    await this._assertScheduleNotInactive(idSchedule);
     await this.schedulersService.executeScheduler(idSchedule);
+  }
+
+  async inactivate(idSchedule: string, code: ScheduleInactiveCodeEnum): Promise<ScheduleViewModel> {
+    const schedule = await this.scheduleRepository.update({
+      where: { id: idSchedule },
+      data: { inactiveAt: new Date(), inactiveCode: code },
+      select: {
+        name: true,
+        inactiveAt: true,
+        id: true,
+        idDatabase: true,
+        frequency: true,
+        updatedAt: true,
+        database: { select: { name: true } },
+      },
+    });
+    this.schedulersService.stopScheduler(idSchedule);
+    return {
+      name: schedule.name,
+      active: !schedule.inactiveAt,
+      idSchedule: schedule.id,
+      idDatabase: schedule.idDatabase,
+      databaseName: schedule.database.name,
+      lastUpdated: schedule.updatedAt,
+      timer: getTimerText(schedule),
+    };
   }
 }

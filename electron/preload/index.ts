@@ -116,7 +116,7 @@ ipcRenderer.on('init-api', (_, paths: string[]) => {
         } catch (error) {
           result = new InternalServerErrorException(error?.message ?? error?.error ?? 'Unknown error');
         }
-        return JSON.parse(JSON.stringify(result));
+        return result;
       },
     }),
     {}

@@ -17,7 +17,9 @@ import { TIME_CONSTANTS } from '../../util/time-constants';
 import { ConfigService } from '../config/config.service';
 import { NotificationService } from '../notification/notification.service';
 import { QueryHistoryCodeEnum } from '../query-history/query-history-code.enum';
+import { QueryHistoryModeEnum } from '../query-history/query-history-mode.enum';
 import { QueryHistoryService } from '../query-history/query-history.service';
+import { ScheduleInactiveCodeEnum } from '../schedule/schedule-inactive-code.enum';
 import { ScheduleService } from '../schedule/schedule.service';
 
 import { DatabaseDriver } from './database-driver';
@@ -36,7 +38,7 @@ export class Scheduler {
     this._configService = injector.get(ConfigService);
     this._logger = Logger.create(`Scheduler [${this._idSchedule}]`);
     const cronTime = getCronTime(schedule);
-    this._cron = new CronJob(cronTime, () => this.execute());
+    this._cron = new CronJob(cronTime, () => this.execute(QueryHistoryModeEnum.Scheduled));
   }
 
   private readonly _idSchedule: string;
@@ -217,11 +219,11 @@ export class Scheduler {
     throw new SchedulerError(QueryHistoryCodeEnum.DatabaseNotAvailable, 'Could not connect to the database');
   }
 
-  private async _handleKnownError(error: SchedulerError): Promise<void> {
+  private async _handleKnownError(error: SchedulerError, mode: QueryHistoryModeEnum): Promise<void> {
     this._logger.error('Failed: ', error.message);
     const filePath = await this._getFilePath();
-    // Check if file is locked
-    if (await check(filePath)) {
+    // Check if file is locked, if the error isn't file not found
+    if (error.code !== QueryHistoryCodeEnum.FileNotFound && (await check(filePath))) {
       // If it is, try to unlock it
       await unlock(filePath);
     }
@@ -232,27 +234,32 @@ export class Scheduler {
       code: error.code,
       message: error.message,
       queryTime: 0,
+      mode,
     });
+    if (error.code === QueryHistoryCodeEnum.FileNotFound) {
+      await this._scheduleService.inactivate(this._idSchedule, ScheduleInactiveCodeEnum.FileNotFound);
+    }
     this._notificationService.show({
       title: `${name} failed to execute`,
       body: 'Please check the schedule page to view the error',
     });
   }
 
-  private async _handleError(error: Error): Promise<void> {
+  private async _handleError(error: Error, mode: QueryHistoryModeEnum): Promise<void> {
     try {
       if (error instanceof SchedulerError) {
-        return await this._handleKnownError(error);
+        return await this._handleKnownError(error, mode);
       }
       return await this._handleKnownError(
-        new SchedulerError(QueryHistoryCodeEnum.Unknown, `Unknown error: ${error.message}`)
+        new SchedulerError(QueryHistoryCodeEnum.Unknown, `Unknown error: ${error.message}`),
+        mode
       );
     } catch (criticalError) {
       this._logger.error('CRITICAL ERROR', criticalError);
     }
   }
 
-  async execute(): Promise<void> {
+  async execute(mode: QueryHistoryModeEnum): Promise<void> {
     try {
       this._logger.log('Executing');
       const startMs = performance.now();
@@ -279,10 +286,11 @@ export class Scheduler {
         idSchedule: id,
         query,
         code: QueryHistoryCodeEnum.Success,
+        mode,
       });
       this._logger.log('Finished', ...formatPerformanceTime(startMs, performance.now()));
     } catch (error) {
-      await this._handleError(error);
+      await this._handleError(error, mode);
     }
   }
 

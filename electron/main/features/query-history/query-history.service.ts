@@ -35,6 +35,7 @@ export class QueryHistoryService {
         code: dto.code,
         message: dto.message,
         queryTime: dto.queryTime,
+        mode: dto.mode,
       },
     });
   }

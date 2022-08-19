@@ -68,7 +68,7 @@ export class Api {
         const data = await instance[methodMetadata.propertyKey](...argsFormatted);
         return new Response({ data, success: true, statusCode: methodMetadata.code });
       } catch (error) {
-        this._logger.error(`Error on ${path}`, error);
+        this._logger.error(`Error on ${path}\n`, error);
         if (error instanceof Exception) {
           return error;
         } else if (error instanceof Prisma.NotFoundError) {
