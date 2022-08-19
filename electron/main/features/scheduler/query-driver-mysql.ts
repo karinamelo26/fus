@@ -54,8 +54,10 @@ export class QueryDriverMySQL extends QueryDriver {
         if (error) {
           let code = QueryErrorEnum.Unknown;
           const message = error.message;
-          if (error.errno === MysqlErrorCodes.ER_QUERY_TIMEOUT) {
+          if (error.errno === MysqlErrorCodes.ER_QUERY_TIMEOUT || error.code === 'PROTOCOL_SEQUENCE_TIMEOUT') {
             code = QueryErrorEnum.Timeout;
+          } else if (error.errno === MysqlErrorCodes.ER_PARSE_ERROR) {
+            code = QueryErrorEnum.QueryError;
           }
           reject(new QueryError(code, message));
           return;

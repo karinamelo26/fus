@@ -1,14 +1,13 @@
 import { Database } from '@prisma/client';
 import { connect, ConnectionPool, RequestError } from 'mssql';
 
+import { TIME_CONSTANTS } from '../../util/time-constants';
 import { DatabaseTypeEnum } from '../database/database-type.enum';
 
 import { QueryDriver } from './query-driver';
 import { QueryError } from './query-error';
 import { QueryErrorEnum } from './query-error.enum';
 import { QueryOptions } from './query-options';
-
-const _15_SECONDS_IN_MS = 15_000;
 
 export class QueryDriverMSSQL extends QueryDriver {
   constructor(private readonly database: Database) {
@@ -55,7 +54,7 @@ export class QueryDriverMSSQL extends QueryDriver {
 
   async canConnect(): Promise<boolean> {
     try {
-      const connection = await this._getConnection({ timeout: _15_SECONDS_IN_MS });
+      const connection = await this._getConnection({ timeout: TIME_CONSTANTS['15_MINUTES_IN_MS'] });
       await connection.query('select 1');
       return true;
     } catch {

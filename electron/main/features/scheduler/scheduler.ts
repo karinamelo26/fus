@@ -1,10 +1,11 @@
 import { copyFile, open, readFile, rm } from 'fs/promises';
-import { basename, extname, join } from 'path';
+import { extname, join } from 'path';
 
 import { Schedule } from '@prisma/client';
 import { CronJob } from 'cron';
+import { format } from 'date-fns';
 import { Workbook, Worksheet } from 'exceljs';
-import { lock } from 'proper-lockfile';
+import { check, lock, unlock } from 'proper-lockfile';
 import { orderBy, round } from 'st-utils';
 import { v4 } from 'uuid';
 
@@ -12,6 +13,7 @@ import { Injector } from '../../di/injector';
 import { Logger } from '../../logger/logger';
 import { formatPerformanceTime } from '../../util/format-performance-time';
 import { pathExists } from '../../util/path-exists';
+import { TIME_CONSTANTS } from '../../util/time-constants';
 import { ConfigService } from '../config/config.service';
 import { NotificationService } from '../notification/notification.service';
 import { QueryHistoryCodeEnum } from '../query-history/query-history-code.enum';
@@ -24,8 +26,6 @@ import { QueryError } from './query-error';
 import { queryErrorEnumToQueryHistoryCodeEnum } from './query-error-enum-to-query-history-code-enum';
 import { SchedulerError } from './scheduler-error';
 
-const _15_MINUTES_IN_MS = 900_000;
-
 export class Scheduler {
   constructor(injector: Injector, schedule: Schedule, private readonly databaseDriver: DatabaseDriver) {
     this._cachedSchedule = schedule;
@@ -36,7 +36,7 @@ export class Scheduler {
     this._configService = injector.get(ConfigService);
     this._logger = Logger.create(`Scheduler [${this._idSchedule}]`);
     const cronTime = getCronTime(schedule);
-    this._cron = new CronJob(cronTime, () => this._execute());
+    this._cron = new CronJob(cronTime, () => this.execute());
   }
 
   private readonly _idSchedule: string;
@@ -62,7 +62,7 @@ export class Scheduler {
       this._cachedSchedule = await this._scheduleService.getOne(this._idSchedule);
       this._cachedScheduleTimer = setTimeout(() => {
         this._resetCachedSchedule();
-      }, _15_MINUTES_IN_MS);
+      }, TIME_CONSTANTS['15_MINUTES_IN_MS']);
     }
     return this._cachedSchedule;
   }
@@ -77,11 +77,10 @@ export class Scheduler {
   }
 
   private async _createTemporaryFile(): Promise<string> {
-    const { idDatabase, id, filePath } = await this._getSchedule();
-    const originalFilename = basename(filePath);
-    const extension = extname(originalFilename);
-    const date = new Date().toISOString();
-    const filename = `${v4()}-${idDatabase}-${id}-${originalFilename}-${date}${extension}`;
+    const { id, filePath } = await this._getSchedule();
+    const extension = extname(filePath);
+    const date = format(new Date(), 'yyyy-MM-dd');
+    const filename = `${v4()}-${date}${extension}`;
     this._logger.log(`Creating temporary file: ${filename}`);
     await this._scheduleService.updateTemporaryFilename(id, filename);
     this._resetCachedSchedule();
@@ -148,6 +147,7 @@ export class Scheduler {
 
   private async _getFile(): Promise<Buffer> {
     const filePath = await this._getFilePath();
+    this._logger.log('File path: ', filePath);
     return readFile(filePath);
   }
 
@@ -163,7 +163,7 @@ export class Scheduler {
   }
 
   private async _updateExcel(data: any[]): Promise<void> {
-    const { filePath } = await this._getSchedule();
+    const filePath = await this._getFilePath();
     const worksheet = await this._resetWorksheet();
     if (!data.length) {
       this._logger.warn('No database data found');
@@ -218,8 +218,13 @@ export class Scheduler {
   }
 
   private async _handleKnownError(error: SchedulerError): Promise<void> {
-    // TODO CHECK ENOENT TRYING TO COPY SHEETS TO TEMPORARY LOCATION
     this._logger.error('Failed: ', error.message);
+    const filePath = await this._getFilePath();
+    // Check if file is locked
+    if (await check(filePath)) {
+      // If it is, try to unlock it
+      await unlock(filePath);
+    }
     const { id, query, name } = await this._getSchedule();
     await this._queryHistoryService.add({
       idSchedule: id,
@@ -247,7 +252,7 @@ export class Scheduler {
     }
   }
 
-  private async _execute(): Promise<void> {
+  async execute(): Promise<void> {
     try {
       this._logger.log('Executing');
       const startMs = performance.now();

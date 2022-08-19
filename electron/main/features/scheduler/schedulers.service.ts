@@ -1,5 +1,6 @@
 import { Database, Schedule } from '@prisma/client';
 
+import { NotFoundException } from '../../api/exception';
 import { Injectable } from '../../di/injectable';
 import { Injector } from '../../di/injector';
 import { Logger } from '../../logger/logger';
@@ -61,5 +62,13 @@ export class SchedulersService {
       return;
     }
     scheduler.stop();
+  }
+
+  async executeScheduler(idSchedule: string): Promise<void> {
+    const scheduler = this._schedulersMap.get(idSchedule);
+    if (!scheduler) {
+      throw new NotFoundException(`Scheduler with id [${idSchedule}] not found`);
+    }
+    await scheduler.execute();
   }
 }

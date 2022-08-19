@@ -121,4 +121,8 @@ export class ScheduleService {
       timer: getTimerText(schedule),
     };
   }
+
+  async execute(idSchedule: string): Promise<void> {
+    await this.schedulersService.executeScheduler(idSchedule);
+  }
 }

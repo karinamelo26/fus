@@ -2,10 +2,9 @@ import { Notification, NotificationConstructorOptions } from 'electron';
 import { concat, concatMap, ignoreElements, of, Subject, timer } from 'rxjs';
 
 import { Injectable } from '../../di/injectable';
+import { TIME_CONSTANTS } from '../../util/time-constants';
 
 import { NotificationPriorityEnum } from './notification-priority.enum';
-
-const _15_SECONDS_IN_MS = 15_000;
 
 @Injectable({ global: true })
 export class NotificationService {
@@ -19,7 +18,7 @@ export class NotificationService {
     this._queue$
       .pipe(
         concatMap(notificationOptions =>
-          concat(of(notificationOptions), timer(_15_SECONDS_IN_MS).pipe(ignoreElements()))
+          concat(of(notificationOptions), timer(TIME_CONSTANTS['15_MINUTES_IN_MS']).pipe(ignoreElements()))
         )
       )
       .subscribe(config => {
