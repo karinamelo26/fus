@@ -1,18 +1,20 @@
 import { ChildProcess, spawn } from 'child_process';
-import { copyFile, readFile, rm } from 'fs/promises';
-import { join } from 'path';
+import { copyFile, readFile, rm, writeFile } from 'fs/promises';
+import { basename, join } from 'path';
 import { performance } from 'perf_hooks';
 
 import { build as esbuild, BuildOptions } from 'esbuild';
+import { copy } from 'fs-extra';
 import globby from 'globby';
 import TscWatchClient from 'tsc-watch/client';
 import { CompilerOptions, createProgram, ModuleKind, ModuleResolutionKind, ScriptTarget } from 'typescript';
 import { PluginOption, ResolvedConfig } from 'vite';
 
 import { Logger } from '../electron/main/logger/logger';
-import { formatPerformanceTime } from '../electron/main/util/format-performance-time';
+import { getBinaryPaths } from '../electron/main/prisma/get-binary-path';
+import { calculateAndFormatPerformanceTime } from '../electron/main/util/format-performance-time';
 
-import { DIST_ELECTRON_PATH, DIST_PATH } from './constants';
+import { DIST_ELECTRON_PATH, DIST_PATH, ELECTRON_PATH } from './constants';
 
 const DIST_ELECTRON_TEMP_BUILD_PATH = join(DIST_ELECTRON_PATH, 'temp-main');
 const DIST_ELECTRON_TEMP_SERVE_PATH = join(DIST_PATH, 'temp');
@@ -74,12 +76,23 @@ function build(): PluginOption {
       logger.log('Bundling with esbuild');
       await esbuild(getEsbuildConfig(config?.isProduction));
       logger.log('Copying files to build');
+      const packageJsonPath = join(process.cwd(), 'package.json');
+      const packageJsonFile = await readFile(packageJsonPath, { encoding: 'utf8' });
+      const packageJson = JSON.parse(packageJsonFile);
+      packageJson.prisma = undefined;
+      const binaryPaths = getBinaryPaths();
       await Promise.all([
         rm(DIST_ELECTRON_TEMP_BUILD_PATH, { recursive: true }),
-        copyFile(join(process.cwd(), 'package.json'), join(DIST_ELECTRON_PATH, 'main', 'package.json')),
+        writeFile(join(DIST_ELECTRON_PATH, 'main', 'package.json'), JSON.stringify(packageJson)),
+        copyFile(
+          join(ELECTRON_PATH, 'main', 'prisma', 'schema.prisma'),
+          join(DIST_ELECTRON_PATH, 'main', 'schema.prisma')
+        ),
+        copy(join(ELECTRON_PATH, 'main', 'prisma', 'migrations'), join(DIST_ELECTRON_PATH, 'main', 'migrations')),
+        copyFile(binaryPaths.queryEngine, join(DIST_ELECTRON_PATH, 'main', basename(binaryPaths.queryEngine))),
       ]);
       const endMs = performance.now();
-      logger.log('Build completed!', ...formatPerformanceTime(startMs, endMs));
+      logger.log('Build completed!', ...calculateAndFormatPerformanceTime(startMs, endMs));
     },
   };
 }
@@ -111,7 +124,7 @@ function serve(): PluginOption {
             server.close();
           });
           const endMs = performance.now();
-          logger.log('Finished building', ...formatPerformanceTime(startMs, endMs));
+          logger.log('Finished building', ...calculateAndFormatPerformanceTime(startMs, endMs));
         });
         watch.start('--project', 'tsconfig.dev.json');
       });

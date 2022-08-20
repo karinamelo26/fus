@@ -124,3 +124,9 @@ ipcRenderer.on('init-api', (_, paths: string[]) => {
   contextBridge.exposeInMainWorld('api-internal', api);
   apiReadyPromiseResolve();
 });
+
+ipcRenderer.on('show-on-console', (_, args) => {
+  // TODO improve this logging
+  // eslint-disable-next-line no-console -- Debugging
+  console.log(args);
+});

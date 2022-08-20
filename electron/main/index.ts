@@ -2,10 +2,7 @@ import 'reflect-metadata';
 import { release } from 'os';
 import { join } from 'path';
 
-import { config } from 'dotenv';
-import { app, BrowserWindow, ipcMain, shell } from 'electron';
-
-config();
+import { app, BrowserWindow, ipcMain, Notification, shell } from 'electron';
 
 import { ApiModule } from './api.module';
 import { bootstrap } from './bootstrap';
@@ -73,7 +70,24 @@ async function createWindow(): Promise<void> {
   });
 }
 
-app.whenReady().then(createWindow);
+app
+  .whenReady()
+  .then(createWindow)
+  .catch(error => {
+    win?.webContents.send('show-on-console', {
+      stack: error.stack,
+      message: error.message,
+      name: error.name,
+    });
+    new Notification({
+      title: 'Error',
+      body: JSON.stringify({
+        stack: error.stack,
+        message: error.message,
+        name: error.name,
+      }),
+    }).show();
+  });
 
 app.on('window-all-closed', () => {
   win = null;

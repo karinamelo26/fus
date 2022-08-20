@@ -10,7 +10,7 @@ import { InjectionToken } from '../di/injection-token';
 import { Injector } from '../di/injector';
 import { Logger } from '../logger/logger';
 import { AnyObject } from '../util/any-object.type';
-import { formatPerformanceTime } from '../util/format-performance-time';
+import { calculateAndFormatPerformanceTime } from '../util/format-performance-time';
 
 import { Controller, ControllerMetadata, MethodMetadata } from './controller';
 import { BadRequestException, Exception, InternalServerErrorException, NotFoundException } from './exception';
@@ -87,7 +87,7 @@ export class Api {
       this._paths.push(path);
       ipcMain.handle(path, this._createHandler(path, instance, methodMetadata));
       const endMs = performance.now();
-      this._logger.log(`[${path}] Initialized`, ...formatPerformanceTime(startMs, endMs));
+      this._logger.log(`[${path}] Initialized`, ...calculateAndFormatPerformanceTime(startMs, endMs));
     }
   }
 
@@ -118,7 +118,7 @@ export class Api {
     await this.moduleResolver.resolveAll();
     const controllers = this.moduleResolver.getControllers();
     await this._initControllers(controllers);
-    this._logger.log('API Initialized', ...formatPerformanceTime(startMs, performance.now()));
+    this._logger.log('API Initialized', ...calculateAndFormatPerformanceTime(startMs, performance.now()));
     return this;
   }
 
