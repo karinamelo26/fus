@@ -21,5 +21,13 @@
     "sourceMap": true,
     "types": ["vitest/globals"]
   },
-  "include": ["vitest.config.ts", "vite.config.ts", "package.json", "electron", "scripts", "vitest.setup.ts"]
+  "include": [
+    "vitest.config.ts",
+    "vite.config.ts",
+    "package.json",
+    "electron",
+    "scripts",
+    "vitest.setup.ts",
+    "vite-env.d.ts"
+  ]
 }

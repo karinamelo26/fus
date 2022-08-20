@@ -7,6 +7,7 @@ import { build as esbuild, BuildOptions } from 'esbuild';
 import { copy } from 'fs-extra';
 import globby from 'globby';
 import TscWatchClient from 'tsc-watch/client';
+import { PackageJson } from 'type-fest';
 import { CompilerOptions, createProgram, ModuleKind, ModuleResolutionKind, ScriptTarget } from 'typescript';
 import { PluginOption, ResolvedConfig } from 'vite';
 
@@ -78,17 +79,30 @@ function build(): PluginOption {
       logger.log('Copying files to build');
       const packageJsonPath = join(process.cwd(), 'package.json');
       const packageJsonFile = await readFile(packageJsonPath, { encoding: 'utf8' });
-      const packageJson = JSON.parse(packageJsonFile);
+      const packageJson: PackageJson & Record<string, unknown> = JSON.parse(packageJsonFile);
+      // Prisma is not customized in production code
       packageJson.prisma = undefined;
+      // Assertion here because we certainly have scripts in our package.json
+      packageJson.scripts!.postinstall = undefined;
+      // We don't need devDependencies in production
+      packageJson.devDependencies = undefined;
+      // We don't engines in production
+      packageJson.engines = undefined;
       const binaryPaths = getBinaryPaths();
       await Promise.all([
+        // Delete temp folder
         rm(DIST_ELECTRON_TEMP_BUILD_PATH, { recursive: true }),
+        // Add modified package.json do dist
         writeFile(join(DIST_ELECTRON_PATH, 'main', 'package.json'), JSON.stringify(packageJson)),
+        // Copy prisma schema to dist
         copyFile(
           join(ELECTRON_PATH, 'main', 'prisma', 'schema.prisma'),
           join(DIST_ELECTRON_PATH, 'main', 'schema.prisma')
         ),
+        // Copy migrations folder to dist
         copy(join(ELECTRON_PATH, 'main', 'prisma', 'migrations'), join(DIST_ELECTRON_PATH, 'main', 'migrations')),
+        // Copy prisma binaries to dist
+        // TODO add more binaries for different OS's
         copyFile(binaryPaths.queryEngine, join(DIST_ELECTRON_PATH, 'main', basename(binaryPaths.queryEngine))),
       ]);
       const endMs = performance.now();

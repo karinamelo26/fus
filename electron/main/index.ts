@@ -1,4 +1,5 @@
 import 'reflect-metadata';
+import './env';
 import { release } from 'os';
 import { join } from 'path';
 

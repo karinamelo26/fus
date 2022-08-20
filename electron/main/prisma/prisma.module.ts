@@ -1,7 +1,7 @@
 import { homedir } from 'os';
 import { join } from 'path';
 
-import { Prisma, PrismaClient } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import { app } from 'electron';
 
 import { Module } from '../api/module';
@@ -17,7 +17,8 @@ import { formatPerformanceTime } from '../util/format-performance-time';
           log: [
             { emit: 'event', level: 'query' },
             { emit: 'event', level: 'error' },
-            // TODO add more logging
+            { emit: 'event', level: 'info' },
+            { emit: 'event', level: 'warn' },
           ],
           datasources: {
             db: {
@@ -27,8 +28,17 @@ import { formatPerformanceTime } from '../util/format-performance-time';
         });
         if (!app.isPackaged) {
           const logger = Logger.create(PrismaClient);
-          prismaClient.$on('query', (event: Prisma.QueryEvent) => {
+          prismaClient.$on('query', event => {
             logger.log(`Query: ${event.query}\nParams:`, event.params, ...formatPerformanceTime(event.duration));
+          });
+          prismaClient.$on('error', event => {
+            logger.error(event.message);
+          });
+          prismaClient.$on('info', event => {
+            logger.log(event.message);
+          });
+          prismaClient.$on('warn', event => {
+            logger.log(event.message);
           });
         }
         return prismaClient;
