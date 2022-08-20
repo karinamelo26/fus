@@ -1,8 +1,7 @@
-import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
-  plugins: [react()],
+  esbuild: {},
   test: {
     coverage: {
       reporter: ['text', 'json', 'html'],
@@ -19,3 +18,5 @@ export default defineConfig({
     setupFiles: ['vitest.setup.ts'],
   },
 });
+
+// TODO check if the new plugin works with vitest
