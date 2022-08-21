@@ -5,7 +5,7 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url = env("DATABASE_URL")
+  url      = env("DATABASE_URL")
 }
 
 model Database {
@@ -54,7 +54,6 @@ model Schedule {
   /// 2 - Query execution error
   inactiveCode                     Int?
   failedAttemptsBeforeInactivation Int?
-
 
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt

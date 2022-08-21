@@ -4,7 +4,6 @@ const config: Config.InitialOptions = {
   projects: ['<rootDir>/electron/jest.config.ts', '<rootDir>/src/jest.config.ts'],
   collectCoverage: true,
   injectGlobals: true,
-  coverageProvider: 'v8',
   coverageReporters: ['text', 'json', 'html'],
   coverageThreshold: {
     global: {
