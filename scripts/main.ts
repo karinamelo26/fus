@@ -15,7 +15,14 @@ import { calculateAndFormatPerformanceTime } from '../electron/main/util/format-
 
 import { DIST_ELECTRON_PATH, ELECTRON_PATH } from './constants';
 
+function getGlobalVars(production = false): Record<string, string> {
+  return {
+    devMode: `${!production}`,
+  };
+}
+
 function getEsbuildConfig(production = false): BuildOptions {
+  const globalVars = getGlobalVars(production);
   return {
     bundle: true,
     entryPoints: [join(ELECTRON_PATH, 'main', 'index.ts')],
@@ -24,9 +31,24 @@ function getEsbuildConfig(production = false): BuildOptions {
     outfile: join(DIST_ELECTRON_PATH, 'main', 'index.js'),
     sourcemap: !production,
     minify: production,
+    define: globalVars,
+    keepNames: true,
     plugins: [
       esbuildPluginDecorator({
         compiler: 'swc',
+        swcCompilerOptions: {
+          jsc: {
+            keepClassNames: true,
+            target: 'es2022',
+            transform: {
+              optimizer: {
+                globals: {
+                  vars: globalVars,
+                },
+              },
+            },
+          },
+        },
       }),
     ],
   };

@@ -8,6 +8,10 @@ import { app, BrowserWindow, ipcMain, Notification, shell } from 'electron';
 import { ApiModule } from './api.module';
 import { bootstrap } from './bootstrap';
 
+declare global {
+  const devMode: boolean;
+}
+
 // Disable GPU Acceleration for Windows 7
 if (release().startsWith('6.1')) {
   app.disableHardwareAcceleration();
@@ -23,7 +27,7 @@ if (!app.requestSingleInstanceLock()) {
   process.exit(0);
 }
 
-const DIST_PATH = app.isPackaged ? join(process.resourcesPath, 'app.asar', 'dist') : join(process.cwd(), 'dist');
+const DIST_PATH = devMode ? join(process.cwd(), 'dist') : join(process.resourcesPath, 'app.asar', 'dist');
 
 let win: BrowserWindow | null = null;
 // Here, you can also use other preload
@@ -44,13 +48,14 @@ async function createWindow(): Promise<void> {
   });
   win.maximize();
 
-  if (app.isPackaged) {
-    await win.loadFile(indexHtml);
-  } else {
+  if (devMode) {
     await win.loadURL(url);
     if (!win.webContents.isDevToolsOpened()) {
       win.webContents.openDevTools();
     }
+  } else {
+    await win.loadFile(indexHtml);
+    // TODO disable some options, like developer tools
   }
 
   const api = await bootstrap(ApiModule);
@@ -124,9 +129,9 @@ ipcMain.handle('open-win', async (event, arg) => {
     },
   });
 
-  if (app.isPackaged) {
-    await childWindow.loadFile(indexHtml, { hash: arg });
-  } else {
+  if (devMode) {
     await childWindow.loadURL(`${url}/#${arg}`);
+  } else {
+    await childWindow.loadFile(indexHtml, { hash: arg });
   }
 });

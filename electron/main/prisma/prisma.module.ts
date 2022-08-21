@@ -2,7 +2,6 @@ import { homedir } from 'os';
 import { join } from 'path';
 
 import { PrismaClient } from '@prisma/client';
-import { app } from 'electron';
 
 import { Module } from '../api/module';
 import { Logger } from '../logger/logger';
@@ -26,7 +25,7 @@ import { formatPerformanceTime } from '../util/format-performance-time';
             },
           },
         });
-        if (!app.isPackaged) {
+        if (devMode) {
           const logger = Logger.create(PrismaClient);
           prismaClient.$on('query', event => {
             logger.log(`Query: ${event.query}\nParams:`, event.params, ...formatPerformanceTime(event.duration));
