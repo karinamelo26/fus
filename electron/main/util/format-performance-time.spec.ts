@@ -2,7 +2,7 @@ import { ConsoleColor } from '../logger/logger';
 
 import { calculateAndFormatPerformanceTime } from './format-performance-time';
 
-describe.concurrent('formatPerformanceTime', () => {
+describe('formatPerformanceTime', () => {
   it('should return green', () => {
     expect(calculateAndFormatPerformanceTime(0, 50)).toEqual([ConsoleColor.FgGreen, '+50ms', ConsoleColor.Reset]);
   });

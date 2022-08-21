@@ -92,6 +92,8 @@ export class ModuleResolver {
   }
 
   static createTest(injector: Injector, metadata: ModuleOptions): ModuleResolver {
-    return new ModuleResolver(injector, metadata);
+    @Module(metadata)
+    class TestModule {}
+    return this.create(injector, TestModule);
   }
 }

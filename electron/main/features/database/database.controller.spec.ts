@@ -1,4 +1,4 @@
-import { mock } from 'vitest-mock-extended';
+import { mock } from 'jest-mock-extended';
 
 import { TestBed } from '../../test-bed/test-bed';
 

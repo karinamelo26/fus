@@ -5,6 +5,6 @@
     "paths": {
       "@styles/*": ["./styles/*"]
     },
-    "types": ["vitest/globals"]
+    "types": ["jest"]
   }
 }

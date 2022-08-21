@@ -13,7 +13,7 @@ function stringifyTarget(target: any): string {
 }
 
 export class Injector {
-  private constructor() {
+  constructor() {
     this._instances.set(Injector, this);
   }
 
@@ -109,8 +109,10 @@ export class Injector {
     return instance;
   }
 
-  async resolveAll(): Promise<this> {
-    const injectableEntries = Injectable.getAll().filter(([, options]) => options.global);
+  async resolveAll(skipGlobal = false): Promise<this> {
+    const injectableEntries = skipGlobal
+      ? []
+      : Injectable.getAll().filter(([target, options]) => options.global && !this._providers.has(target));
     for (const [target, options] of injectableEntries) {
       const provider = options.useFactory
         ? new FactoryProvider(target, options.useFactory, options.deps)
