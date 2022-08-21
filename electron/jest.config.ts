@@ -10,6 +10,8 @@ const swcConfig: SwcConfig = {
       decorators: true,
       syntax: 'typescript',
     },
+    keepClassNames: true,
+    target: 'es2022',
   },
 };
 
