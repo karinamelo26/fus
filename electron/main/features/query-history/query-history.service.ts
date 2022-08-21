@@ -3,6 +3,7 @@ import { subDays } from 'date-fns';
 
 import { Injectable } from '../../di/injectable';
 
+import { AddDto } from './dto/add.dto';
 import { GetHistoryDto } from './dto/get-history.dto';
 import { QueryHistoryRepository } from './query-history.repository';
 
@@ -22,6 +23,19 @@ export class QueryHistoryService {
       where: {
         schedule: whereSchedule,
         createdAt: { gte: subDays(new Date(), dto.daysPrior) },
+      },
+    });
+  }
+
+  async add(dto: AddDto): Promise<QueryHistory> {
+    return this.queryHistoryRepository.create({
+      data: {
+        query: dto.query,
+        idSchedule: dto.idSchedule,
+        code: dto.code,
+        message: dto.message,
+        queryTime: dto.queryTime,
+        mode: dto.mode,
       },
     });
   }

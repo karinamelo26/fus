@@ -7,17 +7,7 @@ export const App = () => {
   async function set() {
     /* eslint-disable */
     console.time('api-call');
-    await api('schedule/add', {
-      name: 'Schedule 1',
-      idDatabase: '3f181d49-4513-4902-bc9e-1a5669a0d23d',
-      query: 'select * from table',
-      frequency: 0,
-      monthDay: 1,
-      hour: 0,
-      timeout: 30000,
-      sheet: 'Sheet1',
-      active: true,
-    })
+    await api('schedule/execute', { idSchedule: '2286f36e-254b-411a-abb4-c0eebdc210b0' })
       .then(console.log)
       .catch(console.error);
     console.timeEnd('api-call');

@@ -66,6 +66,11 @@ export class AddDto {
   sheet!: string;
 
   @IsDefined()
+  @IsString()
+  @IsNotEmpty()
+  filePath!: string;
+
+  @IsDefined()
   @IsBoolean()
   active!: boolean;
 }

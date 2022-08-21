@@ -1,11 +1,6 @@
-import { PathLike } from 'fs';
-import { access, rm } from 'fs/promises';
+import { rm } from 'fs/promises';
 
-export function pathExists(path: PathLike): Promise<boolean> {
-  return access(path)
-    .then(() => true)
-    .catch(() => false);
-}
+import { pathExists } from '../electron/main/util/path-exists';
 
 export async function deleteDist(): Promise<void> {
   if (await pathExists('dist')) {

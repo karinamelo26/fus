@@ -28,21 +28,33 @@ model Database {
 }
 
 model Schedule {
-  id         String    @id @default(uuid())
-  name       String
-  idDatabase String
-  query      String
+  id                               String  @id @default(uuid())
+  name                             String
+  idDatabase                       String
+  query                            String
   /// 1-7
-  weekDay    Int?
+  weekDay                          Int?
   /// 1-12
-  monthDay   Int?
+  monthDay                         Int?
   /// 1-12
-  hour       Int
+  hour                             Int
   /// 0 - Monthly
   /// 1 - Weekly
   /// 2 - Daily
-  frequency  Int
-  timeout    Int       @default(30000)
+  frequency                        Int
+  timeout                          Int     @default(30000)
+  sheet                            String
+  filePath                         String
+  temporaryFilename                String?
+  /// Raw cronTime, use with caution
+  rawCronTime                      String?
+  /// 0 - Inactivated by user
+  /// 1 - File not found
+  /// 2 - Query execution error
+  inactiveCode                     Int?
+  failedAttemptsBeforeInactivation Int?
+
+
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
   inactiveAt DateTime?
@@ -50,25 +62,33 @@ model Schedule {
   database     Database       @relation(fields: [idDatabase], references: [id], onDelete: NoAction, onUpdate: NoAction)
   queryHistory QueryHistory[]
 
+  @@index(fields: [idDatabase])
   @@map("schedule")
 }
 
 model QueryHistory {
-  id         String    @id @default(uuid())
+  id         String  @id @default(uuid())
   idSchedule String
   query      String
   /// 0 - Success
   /// 1 - Timeout
   /// 2 - Database not available
   /// 3 - Query error
+  /// 4 - File not found
+  /// 5 - Unknown
   code       Int
   message    String?
   queryTime  Float
+  /// 0 - Scheduled
+  /// 1 - Manual
+  mode       Int
+
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
   inactiveAt DateTime?
 
   schedule Schedule @relation(fields: [idSchedule], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index(fields: [idSchedule])
   @@map("query_history")
 }

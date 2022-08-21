@@ -6,6 +6,7 @@ import { ipcMain, IpcMainInvokeEvent } from 'electron';
 import { isArray, isNil, isObject } from 'st-utils';
 import { Class } from 'type-fest';
 
+import { InjectionToken } from '../di/injection-token';
 import { Injector } from '../di/injector';
 import { Logger } from '../logger/logger';
 import { AnyObject } from '../util/any-object.type';
@@ -29,6 +30,7 @@ export class Api {
   private readonly _paths: string[] = [];
 
   private _createHandler(
+    path: string,
     instance: any,
     methodMetadata: MethodMetadata
   ): (event: IpcMainInvokeEvent, ...args: unknown[]) => Promise<void> | any {
@@ -66,6 +68,7 @@ export class Api {
         const data = await instance[methodMetadata.propertyKey](...argsFormatted);
         return new Response({ data, success: true, statusCode: methodMetadata.code });
       } catch (error) {
+        this._logger.error(`Error on ${path}\n`, error);
         if (error instanceof Exception) {
           return error;
         } else if (error instanceof Prisma.NotFoundError) {
@@ -82,7 +85,7 @@ export class Api {
       const startMs = performance.now();
       const path = `${controllerMetadata.path}/${methodMetadata.path}`;
       this._paths.push(path);
-      ipcMain.handle(path, this._createHandler(instance, methodMetadata));
+      ipcMain.handle(path, this._createHandler(path, instance, methodMetadata));
       const endMs = performance.now();
       this._logger.log(`[${path}] Initialized`, ...formatPerformanceTime(startMs, endMs));
     }
@@ -102,6 +105,12 @@ export class Api {
 
   getPaths(): string[] {
     return [...this._paths];
+  }
+
+  get<T>(target: InjectionToken<T>): T;
+  get<T>(target: Class<T>): T;
+  get<T>(target: any): T {
+    return this.injector.get(target);
   }
 
   async init(): Promise<this> {
