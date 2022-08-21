@@ -1,4 +1,5 @@
 import { dateInterceptor } from './date.interceptor';
+import { round } from 'st-utils';
 
 /**
  * @typedef {object} Response
@@ -66,11 +67,12 @@ const responseInterceptor = interceptors
  * @param {any} data
  * @returns {Promise<Response>}
  */
-export async function api(path, ...data) {
+export async function api(path, data) {
+  /* eslint-disable no-console */
+  await resolveApi();
   /**
    * @type {Response}
    */
-  await resolveApi();
   let result;
   if (!apiInternal) {
     throw {
@@ -80,7 +82,11 @@ export async function api(path, ...data) {
       data: null,
     };
   }
+  import.meta.env.DEV && console.groupCollapsed(`Request: ${path}`);
+  const startMs = import.meta.env.DEV ? performance.now() : 0;
+  import.meta.env.DEV && console.log('Data: ', data);
   const req = requestInterceptors.reduce((acc, item) => item(acc), { path, data });
+  import.meta.env.DEV && console.log('Data after interceptors: ', req.data);
   const method = apiInternal[req.path];
   if (!method) {
     result = {
@@ -90,11 +96,20 @@ export async function api(path, ...data) {
       data: null,
     };
   } else {
+    import.meta.env.DEV && console.groupEnd();
+    import.meta.env.DEV && console.groupCollapsed(`Response: ${path}`);
     try {
-      const originalResult = await method(...req.data);
-      result = responseInterceptor.reduce((acc, item) => item(acc), originalResult);
+      /**
+       * @type {Response}
+       */
+      const originalResult = await method(req.data);
+      import.meta.env.DEV && console.log('Data: ', originalResult);
+      result = {
+        ...originalResult,
+        data: responseInterceptor.reduce((acc, item) => item(acc), originalResult.data),
+      };
+      import.meta.env.DEV && console.log('Data after interceptors: ', result);
     } catch (error) {
-      // eslint-disable-next-line no-console
       console.error(error);
       result = {
         success: false,
@@ -104,6 +119,9 @@ export async function api(path, ...data) {
       };
     }
   }
+  import.meta.env.DEV && console.log('Time: ', `${round(performance.now() - startMs)}ms`);
+  import.meta.env.DEV && console.groupEnd();
+  /* eslint-enable no-console */
   if (result.success) {
     return result;
   }

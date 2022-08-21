@@ -3,6 +3,8 @@ import { contextBridge, ipcRenderer } from 'electron';
 import { InternalServerErrorException } from '../main/api/exception';
 import { Response } from '../main/api/response';
 
+import { formatResponse } from './format-response';
+
 function domReady(condition: DocumentReadyState[] = ['complete', 'interactive']): Promise<boolean> {
   return new Promise(resolve => {
     if (condition.includes(document.readyState)) {
@@ -116,7 +118,7 @@ ipcRenderer.on('init-api', (_, paths: string[]) => {
         } catch (error) {
           result = new InternalServerErrorException(error?.message ?? error?.error ?? 'Unknown error');
         }
-        return result;
+        return formatResponse(result);
       },
     }),
     {}

@@ -2,16 +2,16 @@ import styles from '@styles/app.module.scss';
 import { api } from './api/api';
 import { Button } from '@mui/material';
 import { Delete } from '@mui/icons-material';
+import { useQuery } from '@tanstack/react-query';
 
 export const App = () => {
+  const { data, isLoading } = useQuery(['schedules'], () => api('schedule/get-all', { active: true }));
+
   async function set() {
-    /* eslint-disable */
-    console.time('api-call');
-    await api('schedule/execute', { idSchedule: '2286f36e-254b-411a-abb4-c0eebdc210b0' })
-      .then(console.log)
-      .catch(console.error);
-    console.timeEnd('api-call');
-    /* eslint-enable */
+    if (isLoading) {
+      return;
+    }
+    await api('schedule/execute', { idSchedule: data.data[0].idSchedule });
   }
 
   return (
