@@ -30,6 +30,8 @@
     "electron-store": "~8.0.2"
   },
   "devDependencies": {
+    "@automapper/classes": "~8.7.1",
+    "@automapper/core": "~8.7.1",
     "@emotion/react": "~11.9.3",
     "@emotion/styled": "~11.9.3",
     "@fontsource/roboto": "~4.5.7",
@@ -50,6 +52,7 @@
     "class-transformer": "~0.5.1",
     "class-validator": "~0.13.2",
     "cross-env": "~7.0.3",
+    "date-fns": "^2.29.1",
     "dotenv": "~16.0.1",
     "electron": "~19.0.10",
     "electron-builder": "~23.1.0",

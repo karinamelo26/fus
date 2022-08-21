@@ -2,10 +2,10 @@ import { isPlainObject } from 'st-utils';
 import { Class } from 'type-fest';
 
 import { Injector } from '../di/injector';
-import { ClassProvider, isProvider } from '../di/provider';
+import { resolveProvider } from '../di/provider';
 import { isClass } from '../util/util';
 
-import { Module, ModuleOptions, resolveProvider } from './module';
+import { Module, ModuleOptions } from './module';
 import { ModuleWithProviders } from './module-with-providers';
 
 type ModuleWithoutImports = Required<Omit<ModuleOptions, 'imports'>>;
@@ -44,7 +44,7 @@ export class ModuleResolver {
     const moduleOptionsChildren = this._getAllOptionsFromModules(moduleMetadata.imports ?? []);
     const providers = [
       ...(moduleMetadata.providers ?? []),
-      ...(moduleWithProvidersProviders ?? []).map(resolveProvider),
+      ...(moduleWithProvidersProviders ?? []),
       ...moduleOptionsChildren.providers,
     ];
     const controllers = [...(moduleMetadata.controllers ?? []), ...moduleOptionsChildren.controllers];
@@ -70,10 +70,10 @@ export class ModuleResolver {
 
   async resolveAll(): Promise<this> {
     const childrenModules = this._getChildrenModuleOptions();
-    const providers = [...(this.moduleMetadata.providers ?? []), ...childrenModules.providers].filter(isProvider);
+    const providers = [...(this.moduleMetadata.providers ?? []), ...childrenModules.providers].map(resolveProvider);
     const controllers = [...(this.moduleMetadata.controllers ?? []), ...childrenModules.controllers];
     this._controllers = controllers;
-    const controllersProviders = controllers.map(controller => new ClassProvider(controller, controller));
+    const controllersProviders = controllers.map(resolveProvider);
     this.injector.addProviders([...providers, ...controllersProviders]);
     await this.injector.resolveAll();
     return this;
