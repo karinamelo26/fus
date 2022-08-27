@@ -1,6 +1,6 @@
 import { ChildProcess, spawn } from 'child_process';
 import { copyFile, readFile, writeFile } from 'fs/promises';
-import { basename, join } from 'path';
+import { join } from 'path';
 import { performance } from 'perf_hooks';
 
 import { build as esbuild, BuildOptions } from 'esbuild';
@@ -10,10 +10,10 @@ import { PackageJson } from 'type-fest';
 import { PluginOption, ResolvedConfig } from 'vite';
 
 import { Logger } from '../electron/main/logger/logger';
-import { getBinaryPaths } from '../electron/main/prisma/get-binary-path';
 import { calculateAndFormatPerformanceTime } from '../electron/main/util/format-performance-time';
 
 import { DIST_ELECTRON_PATH, ELECTRON_PATH } from './constants';
+import { downloadPrismaBinaries } from './download-prisma-binaries';
 
 function getGlobalVars(production = false): Record<string, string> {
   return {
@@ -81,7 +81,6 @@ function build(): PluginOption {
       packageJson.devDependencies = undefined;
       // We don't engines in production
       packageJson.engines = undefined;
-      const binaryPaths = getBinaryPaths();
       await Promise.all([
         // Add modified package.json do dist
         writeFile(join(DIST_ELECTRON_PATH, 'main', 'package.json'), JSON.stringify(packageJson)),
@@ -93,8 +92,7 @@ function build(): PluginOption {
         // Copy migrations folder to dist
         copy(join(ELECTRON_PATH, 'main', 'prisma', 'migrations'), join(DIST_ELECTRON_PATH, 'main', 'migrations')),
         // Copy prisma binaries to dist
-        // TODO add more binaries for different OS's
-        copyFile(binaryPaths.queryEngine, join(DIST_ELECTRON_PATH, 'main', basename(binaryPaths.queryEngine))),
+        downloadPrismaBinaries(),
       ]);
       logger.log('Build completed!', ...calculateAndFormatPerformanceTime(startMs, performance.now()));
     },

@@ -1,4 +1,4 @@
-import { isFunction } from 'st-utils';
+import { isFunction, isUndefined } from 'st-utils';
 import { Class } from 'type-fest';
 
 import { ReflectMetadataTypesEnum } from '../util/reflect-metadata-types.enum';
@@ -37,7 +37,13 @@ export class Injector {
     }
     const injections: any[] = [];
     for (const param of params) {
-      injections.push(await this.resolve(param));
+      const injectionInstance = await this.resolve(param);
+      if (isUndefined(injectionInstance)) {
+        throw new Error(
+          `Error trying to resolve ${stringifyTarget(provider.useClass)}. Param ${stringifyTarget(param)} undefined`
+        );
+      }
+      injections.push(injectionInstance);
     }
     const instance = new provider.useClass(...injections);
     this._instances.set(provider.provide, instance);
@@ -47,7 +53,13 @@ export class Injector {
   private async _resolveFactoryProvider<T>(provider: FactoryProvider): Promise<T> {
     const deps: any[] = [];
     for (const dep of provider.deps ?? []) {
-      deps.push(await this.resolve(dep));
+      const depInstance = await this.resolve(dep);
+      if (isUndefined(depInstance)) {
+        throw new Error(
+          `Error trying to resolve ${stringifyTarget(provider.provide)}. Dep ${stringifyTarget(dep)} undefined`
+        );
+      }
+      deps.push(depInstance);
     }
     const instance = await Promise.resolve(provider.useFactory(...deps));
     this._instances.set(provider.provide, instance);

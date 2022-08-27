@@ -3,10 +3,12 @@ import './env';
 import { release } from 'os';
 import { join } from 'path';
 
-import { app, BrowserWindow, ipcMain, Notification, shell } from 'electron';
+import { app, BrowserWindow, ipcMain, shell } from 'electron';
 
 import { ApiModule } from './api.module';
 import { bootstrap } from './bootstrap';
+import { executeMigrations } from './execute-migrations';
+import { ConfigService } from './features/config/config.service';
 
 declare global {
   const devMode: boolean;
@@ -27,7 +29,7 @@ if (!app.requestSingleInstanceLock()) {
   process.exit(0);
 }
 
-const DIST_PATH = devMode ? join(process.cwd(), 'dist') : join(process.resourcesPath, 'app.asar', 'dist');
+const DIST_PATH = devMode ? join(process.cwd(), 'dist') : join(app.getAppPath(), 'dist');
 
 let win: BrowserWindow | null = null;
 // Here, you can also use other preload
@@ -58,7 +60,13 @@ async function createWindow(): Promise<void> {
     // TODO disable some options, like developer tools
   }
 
-  const api = await bootstrap(ApiModule);
+  const configService = await ConfigService.init();
+
+  if (!devMode) {
+    await executeMigrations(`file:${configService.databasePath}`);
+  }
+
+  const api = await bootstrap(ApiModule, [{ provide: ConfigService, useValue: configService }]);
   win.webContents.send('init-api', api.getPaths());
 
   // Test actively push message to the Electron-Renderer
@@ -80,19 +88,15 @@ app
   .whenReady()
   .then(createWindow)
   .catch(error => {
+    if (devMode) {
+      throw error;
+    }
     win?.webContents.send('show-on-console', {
       stack: error.stack,
       message: error.message,
       name: error.name,
+      fullError: error,
     });
-    new Notification({
-      title: 'Error',
-      body: JSON.stringify({
-        stack: error.stack,
-        message: error.message,
-        name: error.name,
-      }),
-    }).show();
   });
 
 app.on('window-all-closed', () => {

@@ -1,9 +1,7 @@
-import { homedir } from 'os';
-import { join } from 'path';
-
 import { PrismaClient } from '@prisma/client';
 
 import { Module } from '../api/module';
+import { ConfigService } from '../features/config/config.service';
 import { Logger } from '../logger/logger';
 import { formatPerformanceTime } from '../util/format-performance-time';
 
@@ -11,7 +9,8 @@ import { formatPerformanceTime } from '../util/format-performance-time';
   providers: [
     {
       provide: PrismaClient,
-      useFactory: () => {
+      deps: [ConfigService],
+      useFactory: (configService: ConfigService) => {
         const prismaClient = new PrismaClient({
           log: [
             { emit: 'event', level: 'query' },
@@ -20,9 +19,7 @@ import { formatPerformanceTime } from '../util/format-performance-time';
             { emit: 'event', level: 'warn' },
           ],
           datasources: {
-            db: {
-              url: `file:${join(homedir(), '.fus', 'database', 'data.sqlite')}`,
-            },
+            db: { url: `file:${configService.databasePath}` },
           },
         });
         if (devMode) {

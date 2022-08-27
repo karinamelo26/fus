@@ -6,7 +6,7 @@ import { pathExists } from '../electron/main/util/path-exists';
 
 const ENV_PATH = join(process.cwd(), '.env');
 const DATABASE_URL_KEY = 'DATABASE_URL';
-const DATABASE_URL_PATH = join(homedir(), '.fus', 'database', 'data.sqlite');
+const DATABASE_URL_PATH = join(homedir(), '.fus', 'dev', 'database', 'data.sqlite');
 const DATABASE_URL_ENTRY = `${DATABASE_URL_KEY}="file:${DATABASE_URL_PATH}"`;
 
 async function update(): Promise<void> {

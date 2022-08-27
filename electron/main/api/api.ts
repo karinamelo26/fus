@@ -8,6 +8,7 @@ import { Class } from 'type-fest';
 
 import { InjectionToken } from '../di/injection-token';
 import { Injector } from '../di/injector';
+import { Provider } from '../di/provider';
 import { Logger } from '../logger/logger';
 import { AnyObject } from '../util/any-object.type';
 import { calculateAndFormatPerformanceTime } from '../util/format-performance-time';
@@ -122,8 +123,11 @@ export class Api {
     return this;
   }
 
-  static create(module: Class<any>): Api {
+  static create(module: Class<any>, providers?: Provider[]): Api {
     const injector = Injector.create();
+    if (providers?.length) {
+      injector.addProviders(providers);
+    }
     return new Api(injector, ModuleResolver.create(injector, module));
   }
 }

@@ -71,7 +71,7 @@ export class Scheduler {
   }
 
   private _getTemporaryFilePath(temporaryFilename: string): string {
-    return join(this._configService.TEMPORARY_FILES_PATH, temporaryFilename);
+    return join(this._configService.temporaryFilesPath, temporaryFilename);
   }
 
   private async _getFilePath(): Promise<string> {

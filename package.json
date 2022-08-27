@@ -23,7 +23,8 @@
     "test:watch": "jest --watch"
   },
   "dependencies": {
-    "electron-store": "~8.1.0"
+    "electron-store": "~8.1.0",
+    "prisma": "~4.2.1"
   },
   "devDependencies": {
     "@emotion/react": "~11.10.0",
@@ -79,7 +80,6 @@
     "prettier": "~2.7.1",
     "prettier-plugin-prisma": "~4.2.0",
     "prettier-plugin-sql": "~0.11.0",
-    "prisma": "~4.2.1",
     "proper-lockfile": "~4.1.2",
     "react": "~18.2.0",
     "react-dom": "~18.2.0",

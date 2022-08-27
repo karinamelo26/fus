@@ -1,5 +1,3 @@
-import { join } from 'path';
-
 type Platform = NodeJS.Platform | 'darwinArm64';
 
 interface Engines {
@@ -33,7 +31,6 @@ function getPlatformName(): Platform {
   return process.platform;
 }
 
-// TODO Get more engines in the bundle
 export function getBinaryPaths(): Engines {
   const platformName = getPlatformName();
   const engine = platformToExecutables.get(platformName);
@@ -41,7 +38,7 @@ export function getBinaryPaths(): Engines {
     throw new Error(`Platform ${platformName} not supported`);
   }
   return {
-    queryEngine: join(process.cwd(), engine.queryEngine),
-    migrationEngine: join(process.cwd(), engine.migrationEngine),
+    queryEngine: engine.queryEngine,
+    migrationEngine: engine.migrationEngine,
   };
 }
