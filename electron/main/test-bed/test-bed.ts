@@ -1,19 +1,11 @@
 import { Class } from 'type-fest';
 
-import { ModuleOptions } from '../api/module';
+import { Module, ModuleOptions } from '../api/module';
 import { ModuleResolver } from '../api/module-resolver';
 import { InjectionToken } from '../di/injection-token';
 import { Injector } from '../di/injector';
 
-export class TestBedInjector extends Injector {
-  override async resolveAll(): Promise<this> {
-    return super.resolveAll(true);
-  }
-
-  static override create(): TestBedInjector {
-    return new TestBedInjector();
-  }
-}
+import { TestBedInjector } from './test-bed-injector';
 
 export class TestBed {
   static injector: Injector;
@@ -27,6 +19,8 @@ export class TestBed {
 
   static async configureTestingModule(options: ModuleOptions): Promise<void> {
     this.injector = TestBedInjector.create();
-    this.moduleResolver = await ModuleResolver.createTest(this.injector, options).resolveAll();
+    class TestModule {}
+    Module(options)(TestModule);
+    this.moduleResolver = await ModuleResolver.create(this.injector, TestModule).resolveAll();
   }
 }

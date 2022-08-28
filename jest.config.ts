@@ -16,6 +16,7 @@ const config: Config.InitialOptions = {
   verbose: true,
   maxWorkers: '50%',
   logHeapUsage: true,
+  detectOpenHandles: true,
 };
 
 export default config;

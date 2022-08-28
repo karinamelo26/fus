@@ -5,13 +5,19 @@ import { join } from 'path';
 import { Injectable } from '../../di/injectable';
 import { pathExists } from '../../util/path-exists';
 
-const DATABASE_PATHS = devMode ? ['dev', 'database'] : ['database'];
-
 @Injectable()
 export class ConfigService {
-  readonly homePath = join(homedir(), '.fus');
-  readonly databasePath = join(this.homePath, ...DATABASE_PATHS, 'data.sqlite');
+  readonly homePath = this._getHomePath();
+  readonly databasePath = join(this.homePath, 'database', 'data.sqlite');
   readonly temporaryFilesPath = join(this.homePath, 'temporary_files');
+
+  private _getHomePath(): string {
+    const paths = [homedir(), '.fus'];
+    if (devMode) {
+      paths.push('dev');
+    }
+    return join(...paths);
+  }
 
   static async init(): Promise<ConfigService> {
     const config = ConfigService.create();
@@ -21,10 +27,9 @@ export class ConfigService {
       promises.push(mkdir(config.temporaryFilesPath));
     }
     if (devMode) {
-      const devPath = join(config.homePath, 'dev');
-      const devPathExists = await pathExists(devPath);
+      const devPathExists = await pathExists(config.homePath);
       if (!devPathExists) {
-        promises.push(mkdir(devPath));
+        promises.push(mkdir(config.homePath));
       }
     }
     await Promise.all(promises);

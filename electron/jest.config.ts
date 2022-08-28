@@ -18,6 +18,7 @@ const swcConfig: SwcConfig = {
 const config: Config.InitialOptions = {
   projects: ['<rootDir>/electron/jest.config.ts', '<rootDir>/src/jest.config.ts'],
   setupFiles: ['./jest.setup.ts'],
+  setupFilesAfterEnv: ['./jest-after-env.setup.ts'],
   transform: {
     '^.+\\.(t|j)sx?$': ['@swc/jest', swcConfig as Record<string, unknown>],
   },

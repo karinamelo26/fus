@@ -10,10 +10,6 @@ import { bootstrap } from './bootstrap';
 import { executeMigrations } from './execute-migrations';
 import { ConfigService } from './features/config/config.service';
 
-declare global {
-  const devMode: boolean;
-}
-
 // Disable GPU Acceleration for Windows 7
 if (release().startsWith('6.1')) {
   app.disableHardwareAcceleration();
@@ -32,9 +28,7 @@ if (!app.requestSingleInstanceLock()) {
 const DIST_PATH = devMode ? join(process.cwd(), 'dist') : join(app.getAppPath(), 'dist');
 
 let win: BrowserWindow | null = null;
-// Here, you can also use other preload
 const preload = join(DIST_PATH, 'electron', 'preload', 'index.js');
-// 🚧 Use ['ENV_NAME'] avoid vite:define plugin
 const url = `http://localhost:4200`;
 const indexHtml = join(DIST_PATH, 'index.html');
 

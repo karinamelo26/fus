@@ -52,16 +52,14 @@ export class ModuleResolver {
   }
 
   private _getAllOptionsFromModules(modules: Array<Class<any> | ModuleWithProviders>): ModuleWithoutImports {
-    return modules.reduce(
-      (options, module) => {
-        const moduleOptions = this._getAllOptionsFromModule(module);
-        return {
-          providers: [...options.providers, ...moduleOptions.providers],
-          controllers: [...options.controllers, ...moduleOptions.controllers],
-        };
-      },
-      { providers: [], controllers: [] } as ModuleWithoutImports
-    );
+    const initialValue: ModuleWithoutImports = { providers: [], controllers: [] };
+    return modules.reduce((options, module) => {
+      const moduleOptions = this._getAllOptionsFromModule(module);
+      return {
+        providers: [...options.providers, ...moduleOptions.providers],
+        controllers: [...options.controllers, ...moduleOptions.controllers],
+      };
+    }, initialValue);
   }
 
   private _getChildrenModuleOptions(): ModuleWithoutImports {
@@ -89,11 +87,5 @@ export class ModuleResolver {
       throw new Error(`Module "${module.name}" not configured. Did you forget to put the @Module decorator?`);
     }
     return new ModuleResolver(injector, metadata);
-  }
-
-  static createTest(injector: Injector, metadata: ModuleOptions): ModuleResolver {
-    @Module(metadata)
-    class TestModule {}
-    return this.create(injector, TestModule);
   }
 }
