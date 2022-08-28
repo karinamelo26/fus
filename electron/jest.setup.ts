@@ -1,4 +1,6 @@
 import 'reflect-metadata';
+import { mock } from 'jest-mock-extended';
+
 import { TestUtil } from './main/test-util/test-util';
 
 global.devMode = false;
@@ -19,3 +21,4 @@ jest.mock('os', () => {
     homedir: jest.fn().mockReturnValue(TestUtil.HOME_DIR),
   } as typeof import('os');
 });
+jest.mock('electron', () => mock<typeof import('electron')>());
