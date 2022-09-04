@@ -11,7 +11,7 @@ import { v4 } from 'uuid';
 
 import { Injector } from '../../di/injector';
 import { Logger } from '../../logger/logger';
-import { formatPerformanceTime } from '../../util/format-performance-time';
+import { calculateAndFormatPerformanceTime } from '../../util/format-performance-time';
 import { pathExists } from '../../util/path-exists';
 import { TIME_CONSTANTS } from '../../util/time-constants';
 import { ConfigService } from '../config/config.service';
@@ -71,7 +71,7 @@ export class Scheduler {
   }
 
   private _getTemporaryFilePath(temporaryFilename: string): string {
-    return join(this._configService.TEMPORARY_FILES_PATH, temporaryFilename);
+    return join(this._configService.temporaryFilesPath, temporaryFilename);
   }
 
   private async _getFilePath(): Promise<string> {
@@ -288,14 +288,20 @@ export class Scheduler {
       this._logger.log('Getting database data');
       const startMsQuery = performance.now();
       const data = await this._getQueryResults();
-      this._logger.log('Finished executing database query', ...formatPerformanceTime(startMs, performance.now()));
+      this._logger.log(
+        'Finished executing database query',
+        ...calculateAndFormatPerformanceTime(startMs, performance.now())
+      );
       const queryTime = round(performance.now() - startMsQuery);
       const startMsExcel = performance.now();
       this._logger.log('Unlocking file');
       await unlockFunction();
       this._logger.log('Updating excel');
       await this._updateExcel(data);
-      this._logger.log('Finished updating excel', ...formatPerformanceTime(startMsExcel, performance.now()));
+      this._logger.log(
+        'Finished updating excel',
+        ...calculateAndFormatPerformanceTime(startMsExcel, performance.now())
+      );
       this._logger.log('Adding a row to query_history');
       const { id, query } = await this._getSchedule();
       await this._queryHistoryService.add({
@@ -306,7 +312,7 @@ export class Scheduler {
         mode,
       });
       this._failedAttempts = 0;
-      this._logger.log('Finished', ...formatPerformanceTime(startMs, performance.now()));
+      this._logger.log('Finished', ...calculateAndFormatPerformanceTime(startMs, performance.now()));
     } catch (error) {
       await this._handleError(error, mode);
     }

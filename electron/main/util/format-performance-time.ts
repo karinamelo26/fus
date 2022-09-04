@@ -2,8 +2,12 @@ import { round } from 'st-utils';
 
 import { ConsoleColor } from '../logger/logger';
 
-export function formatPerformanceTime(startMs: number, endMs: number): string[] {
+export function calculateAndFormatPerformanceTime(startMs: number, endMs: number): string[] {
   const time = endMs - startMs;
+  return formatPerformanceTime(time);
+}
+
+export function formatPerformanceTime(time: number): string[] {
   const msFormatted = `+${round(time, 1)}ms`;
   let color: ConsoleColor;
   if (time <= 50) {

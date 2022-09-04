@@ -5,17 +5,38 @@ import { join } from 'path';
 import { Injectable } from '../../di/injectable';
 import { pathExists } from '../../util/path-exists';
 
-@Injectable({ global: true, useFactory: () => ConfigService.init() })
+@Injectable()
 export class ConfigService {
-  readonly HOME_PATH = join(homedir(), '.fus');
-  readonly TEMPORARY_FILES_PATH = join(this.HOME_PATH, 'temporary_files');
+  readonly homePath = this._getHomePath();
+  readonly databasePath = join(this.homePath, 'database', 'data.sqlite');
+  readonly temporaryFilesPath = join(this.homePath, 'temporary_files');
+
+  private _getHomePath(): string {
+    const paths = [homedir(), '.fus'];
+    if (devMode) {
+      paths.push('dev');
+    }
+    return join(...paths);
+  }
 
   static async init(): Promise<ConfigService> {
-    const config = new ConfigService();
-    const temporaryFilesPathExists = await pathExists(config.TEMPORARY_FILES_PATH);
+    const config = ConfigService.create();
+    const promises: Promise<any>[] = [];
+    const temporaryFilesPathExists = await pathExists(config.temporaryFilesPath);
     if (!temporaryFilesPathExists) {
-      await mkdir(config.TEMPORARY_FILES_PATH);
+      promises.push(mkdir(config.temporaryFilesPath));
     }
+    if (devMode) {
+      const devPathExists = await pathExists(config.homePath);
+      if (!devPathExists) {
+        promises.push(mkdir(config.homePath));
+      }
+    }
+    await Promise.all(promises);
     return config;
+  }
+
+  static create(): ConfigService {
+    return new ConfigService();
   }
 }

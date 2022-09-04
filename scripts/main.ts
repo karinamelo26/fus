@@ -1,54 +1,56 @@
 import { ChildProcess, spawn } from 'child_process';
-import { copyFile, readFile, rm } from 'fs/promises';
+import { copyFile, readFile, writeFile } from 'fs/promises';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
 
 import { build as esbuild, BuildOptions } from 'esbuild';
-import globby from 'globby';
-import TscWatchClient from 'tsc-watch/client';
-import { CompilerOptions, createProgram, ModuleKind, ModuleResolutionKind, ScriptTarget } from 'typescript';
+import { esbuildPluginDecorator } from 'esbuild-plugin-decorator';
+import { copy } from 'fs-extra';
+import { PackageJson } from 'type-fest';
 import { PluginOption, ResolvedConfig } from 'vite';
 
 import { Logger } from '../electron/main/logger/logger';
-import { formatPerformanceTime } from '../electron/main/util/format-performance-time';
+import { calculateAndFormatPerformanceTime } from '../electron/main/util/format-performance-time';
 
-import { DIST_ELECTRON_PATH, DIST_PATH } from './constants';
+import { DIST_ELECTRON_PATH, ELECTRON_PATH } from './constants';
+import { downloadPrismaBinaries } from './download-prisma-binaries';
 
-const DIST_ELECTRON_TEMP_BUILD_PATH = join(DIST_ELECTRON_PATH, 'temp-main');
-const DIST_ELECTRON_TEMP_SERVE_PATH = join(DIST_PATH, 'temp');
-
-let cachedCompilerOptions: CompilerOptions | undefined;
-
-async function getCompilerOptions(production = false): Promise<CompilerOptions> {
-  const compilerOptions =
-    cachedCompilerOptions ??
-    (cachedCompilerOptions = await readFile(join(process.cwd(), 'tsconfig.json')).then(
-      file => JSON.parse(file.toString()).compilerOptions
-    ));
+function getGlobalVars(production = false): Record<string, string> {
   return {
-    ...compilerOptions,
-    sourceMap: !production,
-    declaration: !production,
-    target: ScriptTarget.ESNext,
-    moduleResolution: ModuleResolutionKind.NodeJs,
-    module: ModuleKind.CommonJS,
-    outDir: DIST_ELECTRON_TEMP_BUILD_PATH,
+    devMode: `${!production}`,
   };
 }
 
-async function getFiles(): Promise<string[]> {
-  return globby('electron/main/**/*.ts');
-}
-
-function getEsbuildConfig(production = false, path = join(DIST_ELECTRON_TEMP_BUILD_PATH, 'index.js')): BuildOptions {
+function getEsbuildConfig(production = false): BuildOptions {
+  const globalVars = getGlobalVars(production);
   return {
     bundle: true,
-    entryPoints: [path],
+    entryPoints: [join(ELECTRON_PATH, 'main', 'index.ts')],
     platform: 'node',
-    external: ['typeorm', 'sqlite3', 'electron'],
+    external: ['electron'],
     outfile: join(DIST_ELECTRON_PATH, 'main', 'index.js'),
     sourcemap: !production,
     minify: production,
+    define: globalVars,
+    keepNames: true,
+    plugins: [
+      esbuildPluginDecorator({
+        compiler: 'swc',
+        swcCompilerOptions: {
+          jsc: {
+            keepClassNames: true,
+            target: 'es2022',
+            transform: {
+              optimizer: {
+                globals: {
+                  vars: globalVars,
+                },
+              },
+            },
+          },
+        },
+      }),
+    ],
   };
 }
 
@@ -64,28 +66,40 @@ function build(): PluginOption {
     writeBundle: async () => {
       const startMs = performance.now();
       logger.log('Building electron');
-      logger.log('Getting files');
-      const files = await getFiles();
-      logger.log('Getting compiler options');
-      const compilerOptions = await getCompilerOptions(config?.isProduction);
-      const program = createProgram(files, compilerOptions);
-      logger.log('Transpiling typescript files');
-      program.emit();
       logger.log('Bundling with esbuild');
       await esbuild(getEsbuildConfig(config?.isProduction));
+      logger.log('Finished esbuild bundling', ...calculateAndFormatPerformanceTime(startMs, performance.now()));
       logger.log('Copying files to build');
+      const packageJsonPath = join(process.cwd(), 'package.json');
+      const packageJsonFile = await readFile(packageJsonPath, { encoding: 'utf8' });
+      const packageJson: PackageJson & Record<string, unknown> = JSON.parse(packageJsonFile);
+      // Prisma is not customized in production code
+      packageJson.prisma = undefined;
+      // Assertion here because we certainly have scripts in our package.json
+      packageJson.scripts!.postinstall = undefined;
+      // We don't need devDependencies in production
+      packageJson.devDependencies = undefined;
+      // We don't engines in production
+      packageJson.engines = undefined;
       await Promise.all([
-        rm(DIST_ELECTRON_TEMP_BUILD_PATH, { recursive: true }),
-        copyFile(join(process.cwd(), 'package.json'), join(DIST_ELECTRON_PATH, 'main', 'package.json')),
+        // Add modified package.json do dist
+        writeFile(join(DIST_ELECTRON_PATH, 'main', 'package.json'), JSON.stringify(packageJson)),
+        // Copy prisma schema to dist
+        copyFile(
+          join(ELECTRON_PATH, 'main', 'prisma', 'schema.prisma'),
+          join(DIST_ELECTRON_PATH, 'main', 'schema.prisma')
+        ),
+        // Copy migrations folder to dist
+        copy(join(ELECTRON_PATH, 'main', 'prisma', 'migrations'), join(DIST_ELECTRON_PATH, 'main', 'migrations')),
+        // Copy prisma binaries to dist
+        downloadPrismaBinaries(),
       ]);
-      const endMs = performance.now();
-      logger.log('Build completed!', ...formatPerformanceTime(startMs, endMs));
+      logger.log('Build completed!', ...calculateAndFormatPerformanceTime(startMs, performance.now()));
     },
   };
 }
 
 function serve(): PluginOption {
-  const watch = new TscWatchClient();
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const electronPath = require('electron') as unknown as string;
   let electronApp: ChildProcess | undefined;
@@ -94,26 +108,50 @@ function serve(): PluginOption {
     name: 'vite-plugin-electron-main-serve',
     apply: 'serve',
     configureServer: server => {
-      server.httpServer?.on('listening', async () => {
-        watch.on('success', async () => {
-          const startMs = performance.now();
-          logger.log('Building files with esbuild');
-          if (electronApp) {
-            electronApp.removeAllListeners();
-            electronApp.kill();
-          }
-          await esbuild(getEsbuildConfig(false, join(DIST_ELECTRON_TEMP_SERVE_PATH, 'electron', 'main', 'index.js')));
-          server.ws.send({ type: 'full-reload' });
-          electronApp = spawn(electronPath, ['.'], { stdio: 'inherit' });
-          electronApp.on('error', () => {
-            watch.kill();
-            process.exit(1);
-            server.close();
-          });
-          const endMs = performance.now();
-          logger.log('Finished building', ...formatPerformanceTime(startMs, endMs));
+      function onRebuild(): void {
+        if (electronApp) {
+          electronApp.removeAllListeners();
+          electronApp.kill();
+        }
+        server.ws.send({ type: 'full-reload' });
+        logger.log('Opening electron app');
+        electronApp = spawn(electronPath, ['.'], { stdio: 'inherit', env: process.env });
+        electronApp.on('error', () => {
+          onError();
         });
-        watch.start('--project', 'tsconfig.dev.json');
+      }
+
+      function onError(): void {
+        if (electronApp) {
+          electronApp.removeAllListeners();
+          electronApp.kill();
+        }
+        process.exit(1);
+        server.close();
+      }
+
+      server.httpServer?.on('listening', async () => {
+        logger.log('Building files with esbuild');
+        const startMs = performance.now();
+        await esbuild({
+          ...getEsbuildConfig(false),
+          watch: {
+            onRebuild: error => {
+              if (error) {
+                logger.error('Esbuild bundle error', error);
+                onError();
+                return;
+              }
+              logger.log('Finished building');
+              onRebuild();
+            },
+          },
+          incremental: true,
+        });
+        const endMs = performance.now();
+        logger.log('Finished building', ...calculateAndFormatPerformanceTime(startMs, endMs));
+        onRebuild();
+        logger.log('Now watching for changes...');
       });
     },
   };

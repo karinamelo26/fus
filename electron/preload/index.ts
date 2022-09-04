@@ -3,6 +3,8 @@ import { contextBridge, ipcRenderer } from 'electron';
 import { InternalServerErrorException } from '../main/api/exception';
 import { Response } from '../main/api/response';
 
+import { formatResponse } from './format-response';
+
 function domReady(condition: DocumentReadyState[] = ['complete', 'interactive']): Promise<boolean> {
   return new Promise(resolve => {
     if (condition.includes(document.readyState)) {
@@ -116,11 +118,17 @@ ipcRenderer.on('init-api', (_, paths: string[]) => {
         } catch (error) {
           result = new InternalServerErrorException(error?.message ?? error?.error ?? 'Unknown error');
         }
-        return result;
+        return formatResponse(result);
       },
     }),
     {}
   );
   contextBridge.exposeInMainWorld('api-internal', api);
   apiReadyPromiseResolve();
+});
+
+ipcRenderer.on('show-on-console', (_, args) => {
+  // TODO improve this logging
+  // eslint-disable-next-line no-console -- Debugging
+  console.log(args);
 });

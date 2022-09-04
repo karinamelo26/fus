@@ -3,7 +3,7 @@ import { noop } from 'st-utils';
 import { isClass } from './util';
 
 describe('util', () => {
-  describe.concurrent('isClass', () => {
+  describe('isClass', () => {
     it('should return true if is class', () => {
       expect(isClass(class {})).toBe(true);
     });
