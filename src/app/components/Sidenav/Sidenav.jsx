@@ -2,7 +2,8 @@ import styles from './Sidenav.module.scss';
 import { List, ListItemButton, ListItemIcon, ListItemText, Typography } from '@mui/material';
 import { AvTimer, DriveFolderUpload, Home, LibraryBooks } from '@mui/icons-material';
 import { For } from '../For';
-import { Link } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
+import { BetterLink } from '../BetterLink';
 
 export function Sidenav() {
   const items = [
@@ -22,6 +23,9 @@ export function Sidenav() {
       path: '/schedules',
     },
   ];
+
+  const { pathname } = useLocation();
+
   return (
     <div className={styles.sidenav}>
       <div className={styles.title}>
@@ -32,7 +36,7 @@ export function Sidenav() {
         <List>
           <For each={items} trackBy="text">
             {item => (
-              <ListItemButton component={Link} to={item.path}>
+              <ListItemButton component={BetterLink} to={item.path} selected={pathname === item.path}>
                 <ListItemIcon>{item.icon}</ListItemIcon>
                 <ListItemText primary={item.text}></ListItemText>
               </ListItemButton>
