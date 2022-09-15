@@ -7,12 +7,13 @@ import { pathExists } from '../../util/path-exists';
 
 @Injectable()
 export class ConfigService {
+  readonly fusPath = join(homedir(), '.fus');
   readonly homePath = this._getHomePath();
   readonly databasePath = join(this.homePath, 'database', 'data.sqlite');
   readonly temporaryFilesPath = join(this.homePath, 'temporary_files');
 
   private _getHomePath(): string {
-    const paths = [homedir(), '.fus'];
+    const paths = [this.fusPath];
     if (devMode) {
       paths.push('dev');
     }
@@ -21,18 +22,20 @@ export class ConfigService {
 
   static async init(): Promise<ConfigService> {
     const config = ConfigService.create();
-    const promises: Promise<any>[] = [];
-    const temporaryFilesPathExists = await pathExists(config.temporaryFilesPath);
-    if (!temporaryFilesPathExists) {
-      promises.push(mkdir(config.temporaryFilesPath));
+    const fusFolderExists = await pathExists(config.fusPath);
+    if (!fusFolderExists) {
+      await mkdir(config.fusPath);
     }
     if (devMode) {
       const devPathExists = await pathExists(config.homePath);
       if (!devPathExists) {
-        promises.push(mkdir(config.homePath));
+        await mkdir(config.homePath);
       }
     }
-    await Promise.all(promises);
+    const temporaryFilesPathExists = await pathExists(config.temporaryFilesPath);
+    if (!temporaryFilesPathExists) {
+      await mkdir(config.temporaryFilesPath);
+    }
     return config;
   }
 

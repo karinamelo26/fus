@@ -1,4 +1,4 @@
-import styles from './Sidenav.module.scss';
+import styles from './sidenav.module.scss';
 import { List, ListItemButton, ListItemIcon, ListItemText, Typography } from '@mui/material';
 import { AvTimer, DriveFolderUpload, Home, LibraryBooks } from '@mui/icons-material';
 import { For } from '../For';

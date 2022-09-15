@@ -11,7 +11,7 @@ export function App() {
       <aside>
         <Sidenav></Sidenav>
       </aside>
-      <main>
+      <main className={styles.main}>
         <Routes>
           <Route path="/" element={<Home></Home>}></Route>
           <Route path="/databases" element={<Databases></Databases>}></Route>

@@ -1,0 +1,38 @@
+.homeSummary {
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  margin: 1rem;
+  padding: 1rem;
+  display: grid;
+  grid-template-columns: 1fr 150px;
+}
+
+.container {
+}
+
+.options {
+}
+
+.boxes {
+  display: flex;
+  margin-top: 0.5rem;
+  margin-left: 2rem;
+}
+.box {
+}
+.boxDivider {
+  margin-left: 2.5rem;
+  margin-right: 2.5rem;
+}
+.boxTitle {
+  font-size: 0.75rem;
+}
+
+.boxValue {
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+.filter {
+  display: flex;
+  justify-content: flex-end;
+}
