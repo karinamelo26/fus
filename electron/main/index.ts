@@ -33,6 +33,15 @@ const url = `http://localhost:4200`;
 const indexHtml = join(DIST_PATH, 'index.html');
 
 async function createWindow(): Promise<void> {
+  if (devMode) {
+    const extensions = {
+      redux: 'lmhkpmbekcpmknklioeibfkpmmfibljd',
+      react: 'fmkadmapgofadopljbjfkapdkoienihi',
+    };
+    const { default: electronDevToolsInstaller } = await import('electron-devtools-installer');
+    await electronDevToolsInstaller(Object.values(extensions));
+  }
+
   win = new BrowserWindow({
     title: 'Main window',
     icon: join(DIST_PATH, 'favicon.svg'),
