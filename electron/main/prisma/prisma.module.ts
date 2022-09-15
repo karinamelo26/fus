@@ -24,16 +24,16 @@ import { formatPerformanceTime } from '../util/format-performance-time';
         });
         if (devMode) {
           const logger = Logger.create(PrismaClient);
-          prismaClient.$on('query', event => {
+          prismaClient.$on('query', (event) => {
             logger.log(`Query: ${event.query}\nParams:`, event.params, ...formatPerformanceTime(event.duration));
           });
-          prismaClient.$on('error', event => {
+          prismaClient.$on('error', (event) => {
             logger.error(event.message);
           });
-          prismaClient.$on('info', event => {
+          prismaClient.$on('info', (event) => {
             logger.log(event.message);
           });
-          prismaClient.$on('warn', event => {
+          prismaClient.$on('warn', (event) => {
             logger.log(event.message);
           });
         }

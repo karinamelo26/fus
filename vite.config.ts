@@ -15,7 +15,7 @@ const SRC_PATH = join(process.cwd(), 'src');
 
 const onlyFrontEnd = !!process.env.ONLY_FRONT_END;
 
-export default defineConfig(async options => {
+export default defineConfig(async (options) => {
   const promises: Promise<unknown>[] = [deleteDist()];
   if (options.command === 'build') {
     promises.push(deleteRelease());

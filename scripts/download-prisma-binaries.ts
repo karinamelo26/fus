@@ -78,7 +78,7 @@ export async function downloadPrismaBinaries(): Promise<void> {
     } else {
       logger.log('Binaries already downloaded');
     }
-    await Promise.all(FILES_TO_COPY.map(file => copy(file)));
+    await Promise.all(FILES_TO_COPY.map((file) => copy(file)));
     logger.log('Binaries copied successfully!');
   } catch (error) {
     logger.error('Error at download prisma binaries\n', error);

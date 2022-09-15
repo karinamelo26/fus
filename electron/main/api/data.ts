@@ -11,7 +11,7 @@ export interface DataOptions {
 export function Data(options?: DataOptions): ParameterDecorator {
   return (target, propertyKey, parameterIndex) => {
     const reflectType = Reflect.getMetadata(ReflectMetadataTypesEnum.paramTypes, target, propertyKey)?.[parameterIndex];
-    Controller.upsertMethodMetadata(target.constructor, String(propertyKey), metadata => {
+    Controller.upsertMethodMetadata(target.constructor, String(propertyKey), (metadata) => {
       metadata.parameters[parameterIndex] = {
         type: options?.type ?? reflectType,
         optional: options?.optional ?? false,

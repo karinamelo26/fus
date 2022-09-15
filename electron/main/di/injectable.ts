@@ -11,12 +11,12 @@ interface Injectable {
 
 const metadataStore = new Map<any, InjectableOptions>();
 
-const getMetadata: Injectable['getMetadata'] = target => metadataStore.get(target) ?? null;
+const getMetadata: Injectable['getMetadata'] = (target) => metadataStore.get(target) ?? null;
 const setMetadata: Injectable['setMetadata'] = (target, metadata) => metadataStore.set(target, metadata);
 const getAll: Injectable['getAll'] = () => [...metadataStore];
 
 function InjectableInternal(options?: InjectableOptions): ClassDecorator {
-  return target => {
+  return (target) => {
     setMetadata(target, options ?? {});
   };
 }

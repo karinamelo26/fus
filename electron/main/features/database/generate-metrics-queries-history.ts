@@ -9,7 +9,7 @@ export function generateMetricsQueriesHistory(
   queriesHistory: QueryHistory[]
 ): Pick<DatabaseAllSummaryViewModel, 'averageQueryRuntime' | 'successRate' | 'runCount'> {
   const queriesHistorySuccess = queriesHistory.filter(
-    queryHistory => queryHistory.code === QueryHistoryCodeEnum.Success
+    (queryHistory) => queryHistory.code === QueryHistoryCodeEnum.Success
   );
   return {
     runCount: queriesHistory.length,

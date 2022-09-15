@@ -35,7 +35,7 @@ export function Sidenav() {
       <div>
         <List>
           <For each={items} trackBy="text">
-            {item => (
+            {(item) => (
               <ListItemButton component={BetterLink} to={item.path} selected={pathname === item.path}>
                 <ListItemIcon>{item.icon}</ListItemIcon>
                 <ListItemText primary={item.text}></ListItemText>

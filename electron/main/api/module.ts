@@ -21,10 +21,10 @@ const metadataStore = new Map<any, ModuleOptions>();
 const setMetadata: Module['setMetadata'] = (target, options) => {
   metadataStore.set(target, options);
 };
-const getMetadata: Module['getMetadata'] = target => metadataStore.get(target) ?? null;
+const getMetadata: Module['getMetadata'] = (target) => metadataStore.get(target) ?? null;
 
 function ModuleInternal(options: ModuleOptions): ClassDecorator {
-  return target => {
+  return (target) => {
     setMetadata(target, options);
   };
 }

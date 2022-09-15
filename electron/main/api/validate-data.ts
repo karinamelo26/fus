@@ -20,8 +20,8 @@ function formatValidationError(validationError: ValidationError): string[] {
 
 export async function validateData(instanceOrInstances: AnyObject | AnyObject[]): Promise<string[]> {
   const instances = coerceArray(instanceOrInstances);
-  const errors = await Promise.all(instances.map(instance => validate(instance, { whitelist: true }))).then(
-    nestedErrors => nestedErrors.flat()
+  const errors = await Promise.all(instances.map((instance) => validate(instance, { whitelist: true }))).then(
+    (nestedErrors) => nestedErrors.flat()
   );
   return formatValidationErrors(errors);
 }

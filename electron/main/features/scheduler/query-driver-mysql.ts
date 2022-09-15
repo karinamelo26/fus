@@ -25,7 +25,7 @@ export class QueryDriverMySQL extends QueryDriver {
         user: this.database.username,
         password: this.database.password,
       });
-      connection.connect(error => {
+      connection.connect((error) => {
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         if (error) {
           reject(new QueryError(QueryErrorEnum.ConnectionError, error.message));
@@ -38,7 +38,7 @@ export class QueryDriverMySQL extends QueryDriver {
 
   private _closeConnection(connection: Connection): Promise<void> {
     return new Promise((resolve, reject) => {
-      connection.end(error => {
+      connection.end((error) => {
         if (error) {
           reject(new QueryError(QueryErrorEnum.ConnectionError, error.message));
           return;
@@ -71,7 +71,7 @@ export class QueryDriverMySQL extends QueryDriver {
     try {
       const connection = await this._createConnection();
       return await new Promise((resolve, reject) => {
-        connection.ping(error => {
+        connection.ping((error) => {
           // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
           if (error) {
             reject(error);

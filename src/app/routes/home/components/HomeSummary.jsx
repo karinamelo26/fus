@@ -7,7 +7,7 @@ import { For } from '../../../components/For';
 export function HomeSummary({ summary, selectedItem, items, onSelectItem }) {
   const [anchorElDays, setAnchorElDays] = useState(null);
   const openDays = Boolean(anchorElDays);
-  const handleClickDays = event => {
+  const handleClickDays = (event) => {
     setAnchorElDays(event.currentTarget);
   };
   const handleCloseDays = () => {
@@ -15,14 +15,14 @@ export function HomeSummary({ summary, selectedItem, items, onSelectItem }) {
   };
   const [anchorElItems, setAnchorElItems] = useState(null);
   const openItems = Boolean(anchorElItems);
-  const handleClickItems = event => {
+  const handleClickItems = (event) => {
     setAnchorElItems(event.currentTarget);
   };
   const handleCloseItems = () => {
     setAnchorElItems(null);
   };
 
-  const selectItem = item => {
+  const selectItem = (item) => {
     onSelectItem(item);
     handleCloseItems();
   };
@@ -35,8 +35,8 @@ export function HomeSummary({ summary, selectedItem, items, onSelectItem }) {
             <ExpandMore></ExpandMore>
           </IconButton>
           <Menu open={openItems} anchorEl={anchorElItems} onClose={handleCloseItems}>
-            <For each={items} trackBy={'id'}>
-              {item => <MenuItem onClick={() => selectItem(item)}>{item.name}</MenuItem>}
+            <For each={items} trackBy="id">
+              {(item) => <MenuItem onClick={() => selectItem(item)}>{item.name}</MenuItem>}
             </For>
           </Menu>
           {selectedItem?.name ?? 'Select Item...'}

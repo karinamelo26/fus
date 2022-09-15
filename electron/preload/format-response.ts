@@ -2,7 +2,7 @@ import { isArray, isDate, isObject, isUndefined } from 'st-utils';
 
 export function formatResponse(body: any): any {
   if (isArray(body)) {
-    return body.map(item => formatResponse(item));
+    return body.map((item) => formatResponse(item));
   } else if (isDate(body)) {
     return body.toISOString();
   } else if (isObject(body)) {

@@ -48,7 +48,7 @@ export class ScheduleService {
         database: { select: { name: true } },
       },
     });
-    return schedules.map(schedule => ({
+    return schedules.map((schedule) => ({
       name: schedule.name,
       active: !schedule.inactiveAt,
       idSchedule: schedule.id,
@@ -68,8 +68,8 @@ export class ScheduleService {
       select: { inactiveAt: true },
     });
     return [
-      schedules.filter(schedule => !schedule.inactiveAt).length,
-      schedules.filter(schedule => schedule.inactiveAt).length,
+      schedules.filter((schedule) => !schedule.inactiveAt).length,
+      schedules.filter((schedule) => schedule.inactiveAt).length,
     ];
   }
 

@@ -70,7 +70,7 @@ async function createWindow(): Promise<void> {
   });
 
   // Make all links open with the browser, not with the application
-  win.webContents.setWindowOpenHandler(params => {
+  win.webContents.setWindowOpenHandler((params) => {
     if (params.url.startsWith('https:')) {
       shell.openExternal(params.url);
     }
@@ -81,7 +81,7 @@ async function createWindow(): Promise<void> {
 app
   .whenReady()
   .then(createWindow)
-  .catch(error => {
+  .catch((error) => {
     if (devMode) {
       throw error;
     }

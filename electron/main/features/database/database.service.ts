@@ -29,7 +29,7 @@ export class DatabaseService {
       where: { inactiveAt: dto.active ? null : { not: null } },
       orderBy: { createdAt: 'asc' },
     });
-    return databases.map(database => ({
+    return databases.map((database) => ({
       active: !database.inactiveAt,
       createdAt: database.createdAt,
       idDatabase: database.id,
@@ -54,8 +54,8 @@ export class DatabaseService {
     return {
       idDatabase: dto.idDatabase,
       databaseName: database.name,
-      scheduleActiveCount: database.schedule.filter(schedule => !schedule.inactiveAt).length,
-      scheduleInactiveCount: database.schedule.filter(schedule => schedule.inactiveAt).length,
+      scheduleActiveCount: database.schedule.filter((schedule) => !schedule.inactiveAt).length,
+      scheduleInactiveCount: database.schedule.filter((schedule) => schedule.inactiveAt).length,
       ...generateMetricsQueriesHistory(queriesHistory),
     };
   }

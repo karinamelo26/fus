@@ -158,7 +158,7 @@ export class Scheduler {
     const { sheet } = await this._getSchedule();
     const file = await this._getFile();
     const workbook = await new Workbook().xlsx.load(file);
-    const worksheet = workbook.worksheets.find(_worksheet => _worksheet.name === sheet);
+    const worksheet = workbook.worksheets.find((_worksheet) => _worksheet.name === sheet);
     if (worksheet) {
       workbook.removeWorksheetEx(worksheet);
     }

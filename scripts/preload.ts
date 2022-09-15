@@ -37,7 +37,7 @@ function serve(): PluginOption {
   return {
     name: 'vite-plugin-electron-serve-preload',
     apply: 'serve',
-    configureServer: server => {
+    configureServer: (server) => {
       server.httpServer?.on('listening', async () => {
         const config = getBuildConfig();
         await viteBuild({
@@ -66,7 +66,7 @@ function build(): PluginOption {
   return {
     name: 'vite-plugin-electron-build-preload',
     apply: 'build',
-    configResolved: configResolved => {
+    configResolved: (configResolved) => {
       config = configResolved;
     },
     writeBundle: async () => {

@@ -23,7 +23,7 @@ export async function spawnAsync(command: string, args: string[], options?: Spaw
       spawnCmd.on('close', () => {
         resolve();
       });
-      spawnCmd.on('error', err => {
+      spawnCmd.on('error', (err) => {
         reject(err);
       });
     } catch (err) {

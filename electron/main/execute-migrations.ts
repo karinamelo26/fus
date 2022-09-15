@@ -26,11 +26,11 @@ export async function executeMigrations(databaseUrl: string): Promise<number> {
 
     let fullError: string;
 
-    child.on('error', error => {
+    child.on('error', (error) => {
       reject(error);
     });
 
-    child.on('close', code => {
+    child.on('close', (code) => {
       if (fullError) {
         reject(fullError);
         return;
@@ -38,7 +38,7 @@ export async function executeMigrations(databaseUrl: string): Promise<number> {
       resolve(code);
     });
 
-    child.stderr?.on('data', data => {
+    child.stderr?.on('data', (data) => {
       fullError += data.toString();
     });
   });

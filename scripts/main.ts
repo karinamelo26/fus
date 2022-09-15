@@ -60,7 +60,7 @@ function build(): PluginOption {
   return {
     name: 'vite-plugin-electron-main-build',
     apply: 'build',
-    configResolved: resolvedConfig => {
+    configResolved: (resolvedConfig) => {
       config = resolvedConfig;
     },
     writeBundle: async () => {
@@ -107,7 +107,7 @@ function serve(): PluginOption {
   return {
     name: 'vite-plugin-electron-main-serve',
     apply: 'serve',
-    configureServer: server => {
+    configureServer: (server) => {
       function onRebuild(): void {
         if (electronApp) {
           electronApp.removeAllListeners();
@@ -136,7 +136,7 @@ function serve(): PluginOption {
         await esbuild({
           ...getEsbuildConfig(false),
           watch: {
-            onRebuild: error => {
+            onRebuild: (error) => {
               if (error) {
                 logger.error('Esbuild bundle error', error);
                 onError();

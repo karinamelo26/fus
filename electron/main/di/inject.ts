@@ -21,7 +21,7 @@ const setMetadata: Inject['setMetadata'] = (target, index, metadata) => {
   }
   classStored.set(index, metadata);
 };
-const getAllForTarget: Inject['getAllForTarget'] = target => {
+const getAllForTarget: Inject['getAllForTarget'] = (target) => {
   const classStored = metadataStore.get(target) ?? new MapParameter();
   const array: (InjectMetadata | undefined)[] = [];
   for (const [index, metadata] of classStored) {

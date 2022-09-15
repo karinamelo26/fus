@@ -29,7 +29,7 @@ export class SchedulersService {
   }
 
   addSchedulers(schedules: ScheduleWithDatabase[]): Scheduler[] {
-    return schedules.map(schedule => this.addScheduler(schedule));
+    return schedules.map((schedule) => this.addScheduler(schedule));
   }
 
   addScheduler(schedule: ScheduleWithDatabase): Scheduler {

@@ -58,14 +58,14 @@ export class Api {
           }
         );
         const parameters = await Promise.all(parametersPromises);
-        const errors = parameters.filter(parameter => parameter.errors?.length);
+        const errors = parameters.filter((parameter) => parameter.errors?.length);
         if (errors.length) {
           const errorsFormatted = errors
             .reduce((acc, item) => [...acc, ...(item.errors ?? [])], [] as string[])
             .join(', ');
           return new BadRequestException(errorsFormatted);
         }
-        const argsFormatted = parameters.map(parameter => parameter.data);
+        const argsFormatted = parameters.map((parameter) => parameter.data);
         const data = await instance[methodMetadata.propertyKey](...argsFormatted);
         return new Response({ data, success: true, statusCode: methodMetadata.code });
       } catch (error) {

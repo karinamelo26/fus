@@ -1,7 +1,7 @@
 import { isArray, isObject, isString } from 'st-utils';
 
 export function dateInterceptor() {
-  return { response: res => handleAny(res) };
+  return { response: (res) => handleAny(res) };
 }
 
 const ISO_DATE_REGEXP =
@@ -23,7 +23,7 @@ function handleObject(object) {
 }
 
 function handleArray(value) {
-  return value.map(item => handleAny(item));
+  return value.map((item) => handleAny(item));
 }
 
 function isISODate(value) {

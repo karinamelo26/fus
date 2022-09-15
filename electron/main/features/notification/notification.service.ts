@@ -17,11 +17,11 @@ export class NotificationService {
   private _init(): void {
     this._queue$
       .pipe(
-        concatMap(notificationOptions =>
+        concatMap((notificationOptions) =>
           concat(of(notificationOptions), timer(TIME_CONSTANTS['15_SECONDS_IN_MS']).pipe(ignoreElements()))
         )
       )
-      .subscribe(config => {
+      .subscribe((config) => {
         this._show(config);
       });
   }

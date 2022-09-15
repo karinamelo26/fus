@@ -1,2 +1,5 @@
--- AlterTable
-ALTER TABLE "schedule" ADD COLUMN "failedAttemptsBeforeInactivation" INTEGER;
+ -- AlterTable
+ALTER TABLE
+  "schedule"
+ADD COLUMN
+  "failedAttemptsBeforeInactivation" INTEGER;

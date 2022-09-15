@@ -13,7 +13,7 @@ export function createRepository<K extends keyof PrismaClient>(repository: K): C
 }
 
 export function Repository(options?: Pick<InjectableOptions, 'global'>): ClassDecorator {
-  return target => {
+  return (target) => {
     Injectable({
       global: options?.global,
       deps: [PrismaClient],
