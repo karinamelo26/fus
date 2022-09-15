@@ -27,7 +27,7 @@ export function Home() {
 
       <Divider></Divider>
       <Show when={summaryAllQuery}>
-        {({ data }) => (
+        {(data) => (
           <HomeSummary
             summary={data}
             selectedItem={{
@@ -38,12 +38,12 @@ export function Home() {
         )}
       </Show>
       <Show when={allDatabases}>
-        {({ data }) => (
+        {(data) => (
           <HomeSummary
-            summary={databaseSummary.data?.data}
+            summary={databaseSummary.data}
             selectedItem={selectedDatabase}
-            onSelectItem={item => setSelectedDatabase(item)}
-            items={data.map(item => ({
+            onSelectItem={(item) => setSelectedDatabase(item)}
+            items={data.map((item) => ({
               id: item.idDatabase,
               name: item.name,
             }))}

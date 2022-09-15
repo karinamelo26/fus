@@ -3,7 +3,7 @@
   "rules": {
     "object-shorthand": ["error"],
     "object-curly-spacing": ["error", "always"],
-    "arrow-parens": ["error", "as-needed"],
+    "arrow-parens": ["error", "always"],
     "brace-style": ["off", "off"],
     "id-blacklist": "off",
     "id-match": "off",

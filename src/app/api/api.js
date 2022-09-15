@@ -51,21 +51,21 @@ const interceptors = [dateInterceptor()];
  * @type {RequestInterceptor[]}
  */
 const requestInterceptors = interceptors
-  .filter(interceptor => interceptor.request)
-  .map(interceptor => interceptor.request);
+  .filter((interceptor) => interceptor.request)
+  .map((interceptor) => interceptor.request);
 
 /**
  * @type {ResponseInterceptor[]}
  */
 const responseInterceptor = interceptors
-  .filter(interceptor => interceptor.response)
-  .map(interceptor => interceptor.response);
+  .filter((interceptor) => interceptor.response)
+  .map((interceptor) => interceptor.response);
 
 /**
- *
+ * @template T, R
  * @param {string} path
- * @param {any} data
- * @returns {Promise<Response>}
+ * @param {T} data
+ * @returns {Promise<R>}
  */
 export async function api(path, data) {
   /* eslint-disable no-console */
@@ -82,11 +82,9 @@ export async function api(path, data) {
       data: null,
     };
   }
-  import.meta.env.DEV && console.groupCollapsed(`Request: ${path}`);
   const startMs = import.meta.env.DEV ? performance.now() : 0;
-  import.meta.env.DEV && console.log('Data: ', data);
   const req = requestInterceptors.reduce((acc, item) => item(acc), { path, data });
-  import.meta.env.DEV && console.log('Data after interceptors: ', req.data);
+  import.meta.env.DEV && console.log(`[${path}] Request`, req.data);
   const method = apiInternal[req.path];
   if (!method) {
     result = {
@@ -96,19 +94,16 @@ export async function api(path, data) {
       data: null,
     };
   } else {
-    import.meta.env.DEV && console.groupEnd();
-    import.meta.env.DEV && console.groupCollapsed(`Response: ${path}`);
     try {
       /**
        * @type {Response}
        */
       const originalResult = await method(req.data);
-      import.meta.env.DEV && console.log('Data: ', originalResult);
       result = {
         ...originalResult,
         data: responseInterceptor.reduce((acc, item) => item(acc), originalResult.data),
       };
-      import.meta.env.DEV && console.log('Data after interceptors: ', result);
+      import.meta.env.DEV && console.log(`[${path}] Response`, result);
     } catch (error) {
       console.error(error);
       result = {
@@ -119,11 +114,10 @@ export async function api(path, data) {
       };
     }
   }
-  import.meta.env.DEV && console.log('Time: ', `${round(performance.now() - startMs)}ms`);
-  import.meta.env.DEV && console.groupEnd();
+  import.meta.env.DEV && console.log(`[${path}] Request time`, `${round(performance.now() - startMs)}ms`);
   /* eslint-enable no-console */
   if (result.success) {
-    return result;
+    return result.data;
   }
   throw result;
 }
