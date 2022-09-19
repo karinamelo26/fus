@@ -5,10 +5,12 @@ import { IdNameViewModel } from '../../shared/view-model/id-name.view-model';
 
 import { DatabaseService } from './database.service';
 import { AddDto } from './dto/add.dto';
+import { ConnectionStatusDto } from './dto/connection-status.dto';
 import { GetAllSummaryDto } from './dto/get-all-summary.dto';
 import { GetAllDto } from './dto/get-all.dto';
 import { GetSummaryDto } from './dto/get-summary.dto';
 import { DatabaseAllSummaryViewModel } from './view-model/database-all-summary.view-model';
+import { DatabaseConnectionStatusViewModel } from './view-model/database-connection-status.view-model';
 import { DatabaseSummaryViewModel } from './view-model/database-summary.view-model';
 import { DatabaseViewModel } from './view-model/database.view-model';
 
@@ -39,5 +41,10 @@ export class DatabaseController {
   @Method('add')
   async add(@Data() dto: AddDto): Promise<DatabaseViewModel> {
     return this.databaseService.add(dto);
+  }
+
+  @Method('connection-status')
+  async connectionStatus(@Data() dto: ConnectionStatusDto): Promise<DatabaseConnectionStatusViewModel> {
+    return this.databaseService.getConnectionStatus(dto);
   }
 }

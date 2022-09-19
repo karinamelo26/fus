@@ -1,17 +1,23 @@
+import { Prisma } from '@prisma/client';
+
 import { Injectable } from '../../di/injectable';
 import { fromEnumToIdName } from '../../shared/from-enum-to-id-name';
 import { IdNameViewModel } from '../../shared/view-model/id-name.view-model';
 import { QueryHistoryService } from '../query-history/query-history.service';
 import { ScheduleService } from '../schedule/schedule.service';
+import { SchedulersService } from '../scheduler/schedulers.service';
 
 import { DatabaseTypeEnum } from './database-type.enum';
 import { DatabaseRepository } from './database.repository';
 import { AddDto } from './dto/add.dto';
+import { ConnectionStatusDto } from './dto/connection-status.dto';
 import { GetAllSummaryDto } from './dto/get-all-summary.dto';
 import { GetAllDto } from './dto/get-all.dto';
 import { GetSummaryDto } from './dto/get-summary.dto';
 import { generateMetricsQueriesHistory } from './generate-metrics-queries-history';
 import { DatabaseAllSummaryViewModel } from './view-model/database-all-summary.view-model';
+import { DatabaseConnectionStatusEnum } from './view-model/database-connection-status.enum';
+import { DatabaseConnectionStatusViewModel } from './view-model/database-connection-status.view-model';
 import { DatabaseSummaryViewModel } from './view-model/database-summary.view-model';
 import { DatabaseViewModel } from './view-model/database.view-model';
 
@@ -20,13 +26,18 @@ export class DatabaseService {
   constructor(
     private readonly databaseRepository: DatabaseRepository,
     private readonly queryHistoryService: QueryHistoryService,
-    private readonly scheduleService: ScheduleService
+    private readonly scheduleService: ScheduleService,
+    private readonly schedulersServices: SchedulersService
   ) {}
 
   async getAll(dto: GetAllDto): Promise<DatabaseViewModel[]> {
+    const where: Prisma.DatabaseWhereInput = {};
+    if (dto.active) {
+      where.inactiveAt = null;
+    }
     const databases = await this.databaseRepository.findMany({
       include: { _count: { select: { schedule: true } } },
-      where: { inactiveAt: dto.active ? null : { not: null } },
+      where,
       orderBy: { createdAt: 'asc' },
     });
     return databases.map(database => ({
@@ -93,6 +104,15 @@ export class DatabaseService {
       active: !database.inactiveAt,
       createdAt: database.createdAt,
       scheduleCount: 0,
+    };
+  }
+
+  async getConnectionStatus(dto: ConnectionStatusDto): Promise<DatabaseConnectionStatusViewModel> {
+    const database = await this.databaseRepository.findFirstOrThrow({ where: { id: dto.idDatabase } });
+    const { canConnect, message } = await this.schedulersServices.getConnectionStatus(database);
+    return {
+      status: canConnect ? DatabaseConnectionStatusEnum.OK : DatabaseConnectionStatusEnum.Error,
+      message,
     };
   }
 }

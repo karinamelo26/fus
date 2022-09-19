@@ -5,6 +5,7 @@ import { TIME_CONSTANTS } from '../../util/time-constants';
 import { DatabaseTypeEnum } from '../database/database-type.enum';
 
 import { QueryDriver } from './query-driver';
+import { QueryDriverCanConnectResponse } from './query-driver-can-connect-response';
 import { QueryError } from './query-error';
 import { QueryErrorEnum } from './query-error.enum';
 import { QueryOptions } from './query-options';
@@ -52,13 +53,19 @@ export class QueryDriverMSSQL extends QueryDriver {
     }
   }
 
-  async canConnect(): Promise<boolean> {
+  async canConnect(): Promise<QueryDriverCanConnectResponse> {
     try {
       const connection = await this._getConnection({ timeout: TIME_CONSTANTS['15_SECONDS_IN_MS'] });
       await connection.query('select 1');
-      return true;
-    } catch {
-      return false;
+      return {
+        canConnect: true,
+        message: 'Connection OK',
+      };
+    } catch (error) {
+      return {
+        message: error.message ?? 'Unknown error',
+        canConnect: false,
+      };
     }
   }
 
