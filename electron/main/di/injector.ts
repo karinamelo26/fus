@@ -138,6 +138,10 @@ export class Injector {
     return this;
   }
 
+  add<T>(target: any, instance: T): void {
+    this._instances.set(target, instance);
+  }
+
   static create(): Injector {
     return new Injector();
   }

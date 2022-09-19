@@ -11,7 +11,9 @@ import { ModuleWithProviders } from './module-with-providers';
 type ModuleWithoutImports = Required<Omit<ModuleOptions, 'imports'>>;
 
 export class ModuleResolver {
-  private constructor(private readonly injector: Injector, private readonly moduleMetadata: ModuleOptions) {}
+  private constructor(private readonly injector: Injector, private readonly moduleMetadata: ModuleOptions) {
+    this.injector.add(ModuleResolver, this);
+  }
 
   private readonly _moduleSet = new Map<any, ModuleWithoutImports>();
   private _controllers: Class<any>[] = [];

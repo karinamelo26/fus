@@ -1,6 +1,6 @@
 import styles from './sidenav.module.scss';
 import { List, ListItemButton, ListItemIcon, ListItemText, Typography } from '@mui/material';
-import { AvTimer, DriveFolderUpload, Home, LibraryBooks } from '@mui/icons-material';
+import { AvTimer, DriveFolderUpload, Home, LibraryBooks, Webhook } from '@mui/icons-material';
 import { For } from '../For';
 import { useLocation } from 'react-router-dom';
 import { BetterLink } from '../BetterLink';
@@ -23,6 +23,14 @@ export function Sidenav() {
       path: '/schedules',
     },
   ];
+
+  if (import.meta.env.DEV) {
+    items.push({
+      icon: <Webhook></Webhook>,
+      text: 'API Documentation',
+      path: '/docs',
+    });
+  }
 
   const { pathname } = useLocation();
 
