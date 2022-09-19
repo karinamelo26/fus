@@ -3,7 +3,7 @@ import './env';
 import { release } from 'os';
 import { join } from 'path';
 
-import { app, BrowserWindow, ipcMain, shell } from 'electron';
+import { app, BrowserWindow, ipcMain, shell, Tray, Menu, MenuItem, screen } from 'electron';
 
 import { ApiModule } from './api.module';
 import { bootstrap } from './bootstrap';
@@ -33,6 +33,41 @@ const url = `http://localhost:4200`;
 const indexHtml = join(DIST_PATH, 'index.html');
 
 async function createWindow(): Promise<void> {
+  const { width, height } = screen.getPrimaryDisplay().workArea;
+
+  win = new BrowserWindow({
+    title: 'Main window',
+    icon: join(DIST_PATH, 'favicon.svg'),
+    width,
+    height,
+    webPreferences: {
+      preload,
+      nodeIntegration: true,
+      contextIsolation: true,
+      devTools: devMode,
+    },
+  });
+  win.setMenu(null);
+  const tray = new Tray(join(process.cwd(), 'public/electron.png'));
+  tray.setTitle('Electron app');
+  tray.setToolTip('This is electron app');
+  tray.on('double-click', () => {
+    win?.show();
+  });
+  const menu = new Menu();
+  const menuItem = new MenuItem({
+    label: 'Open',
+    click: () => {
+      win?.show();
+    },
+  });
+  menu.append(menuItem);
+  tray.setContextMenu(menu);
+  win.on('minimize', (event: Event) => {
+    event.preventDefault();
+    win?.hide();
+  });
+
   if (devMode) {
     const extensions = {
       redux: 'lmhkpmbekcpmknklioeibfkpmmfibljd',
@@ -40,20 +75,6 @@ async function createWindow(): Promise<void> {
     };
     const { default: electronDevToolsInstaller } = await import('electron-devtools-installer');
     await electronDevToolsInstaller(Object.values(extensions));
-  }
-
-  win = new BrowserWindow({
-    title: 'Main window',
-    icon: join(DIST_PATH, 'favicon.svg'),
-    webPreferences: {
-      preload,
-      nodeIntegration: true,
-      contextIsolation: true,
-    },
-  });
-  win.maximize();
-
-  if (devMode) {
     await win.loadURL(url);
     if (!win.webContents.isDevToolsOpened()) {
       win.webContents.openDevTools();
