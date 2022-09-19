@@ -4,6 +4,7 @@ import { Class } from 'type-fest';
 import { DatabaseTypeEnum } from '../database/database-type.enum';
 
 import { QueryDriver } from './query-driver';
+import { QueryDriverCanConnectResponse } from './query-driver-can-connect-response';
 import { QueryDriverMSSQL } from './query-driver-mssql';
 import { QueryDriverMySQL } from './query-driver-mysql';
 import { QueryOptions } from './query-options';
@@ -23,7 +24,7 @@ export class DatabaseDriver {
     return new queryDriver(this.database);
   }
 
-  canConnect(): Promise<boolean> {
+  canConnect(): Promise<QueryDriverCanConnectResponse> {
     return this._queryDriver.canConnect();
   }
 

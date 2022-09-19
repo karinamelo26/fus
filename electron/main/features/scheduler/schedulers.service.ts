@@ -7,6 +7,7 @@ import { Logger } from '../../logger/logger';
 import { QueryHistoryModeEnum } from '../query-history/query-history-mode.enum';
 
 import { DatabaseDriver } from './database-driver';
+import { QueryDriverCanConnectResponse } from './query-driver-can-connect-response';
 import { Scheduler } from './scheduler';
 
 export type ScheduleWithDatabase = Schedule & { database: Database };
@@ -71,5 +72,10 @@ export class SchedulersService {
       throw new NotFoundException(`Scheduler with id [${idSchedule}] not found`);
     }
     await scheduler.execute(QueryHistoryModeEnum.Manual);
+  }
+
+  async getConnectionStatus(database: Database): Promise<QueryDriverCanConnectResponse> {
+    const driver = await this._getOrCreateDatabaseDriver(database);
+    return driver.canConnect();
   }
 }

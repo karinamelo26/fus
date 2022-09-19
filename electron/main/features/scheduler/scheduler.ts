@@ -213,7 +213,7 @@ export class Scheduler {
   }
 
   private async _assertConnection(): Promise<void> {
-    const canConnect = await this.databaseDriver.canConnect();
+    const { canConnect } = await this.databaseDriver.canConnect();
     if (canConnect) {
       return;
     }

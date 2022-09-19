@@ -5,6 +5,7 @@ import { MysqlErrorCodes } from 'mysql-error-codes';
 import { DatabaseTypeEnum } from '../database/database-type.enum';
 
 import { QueryDriver } from './query-driver';
+import { QueryDriverCanConnectResponse } from './query-driver-can-connect-response';
 import { QueryError } from './query-error';
 import { QueryErrorEnum } from './query-error.enum';
 import { QueryOptions } from './query-options';
@@ -67,7 +68,7 @@ export class QueryDriverMySQL extends QueryDriver {
     });
   }
 
-  async canConnect(): Promise<boolean> {
+  async canConnect(): Promise<QueryDriverCanConnectResponse> {
     try {
       const connection = await this._createConnection();
       return await new Promise((resolve, reject) => {
@@ -77,11 +78,17 @@ export class QueryDriverMySQL extends QueryDriver {
             reject(error);
             return;
           }
-          resolve(true);
+          resolve({
+            canConnect: true,
+            message: 'Connection OK',
+          });
         });
       });
-    } catch {
-      return false;
+    } catch (error) {
+      return {
+        canConnect: false,
+        message: error.message ?? 'Unknown error',
+      };
     }
   }
 
