@@ -9,6 +9,7 @@ import '@fontsource/roboto/500.css';
 import '@fontsource/roboto/700.css';
 import { createTheme, CssBaseline, ThemeProvider } from '@mui/material';
 import { BrowserRouter } from 'react-router-dom';
+import { RecoilRoot } from 'recoil';
 
 const queryClient = new QueryClient();
 
@@ -20,7 +21,9 @@ ReactDOM.createRoot(document.getElementById('root')).render(
       <QueryClientProvider client={queryClient}>
         <CssBaseline />
         <BrowserRouter>
-          <App />
+          <RecoilRoot>
+            <App />
+          </RecoilRoot>
         </BrowserRouter>
       </QueryClientProvider>
     </ThemeProvider>
