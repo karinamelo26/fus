@@ -25,7 +25,7 @@ export class DocsService {
       });
     }
     return {
-      name: controller.name,
+      name: controller.name.replace(/Controller$/, ''),
       path: metadata.path,
       methods,
     };

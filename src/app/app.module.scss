@@ -1,6 +1,6 @@
 .App {
   display: grid;
-  grid-template-columns: minmax(0, 300px) minmax(0, 1fr);
+  grid-template-columns: minmax(0, var(--sidenav-width)) minmax(0, 1fr);
 }
 
 .main {
