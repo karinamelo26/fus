@@ -4,7 +4,14 @@ import { useState } from 'react';
 import { ExpandMore } from '@mui/icons-material';
 import { For } from '../../../components/For';
 
-export function HomeSummary({ summary, selectedItem, items, onSelectItem, daysPriorSelected, onSelectDaysPrior }) {
+export function HomeSummary({
+  summary,
+  selectedItem,
+  items,
+  onSelectItem,
+  daysPriorSelected,
+  onSelectDaysPrior,
+}) {
   const [anchorElDays, setAnchorElDays] = useState(null);
   const openDays = Boolean(anchorElDays);
   const handleClickDays = (event) => {
@@ -47,7 +54,9 @@ export function HomeSummary({ summary, selectedItem, items, onSelectItem, daysPr
           </IconButton>
           <Menu open={openItems} anchorEl={anchorElItems} onClose={handleCloseItems}>
             <For each={items} trackBy="id">
-              {(item) => <MenuItem onClick={() => selectItem(item)}>{item.name}</MenuItem>}
+              {(item) => (
+                <MenuItem onClick={() => selectItem(item)}>{item.name}</MenuItem>
+              )}
             </For>
           </Menu>
           {selectedItem?.name ?? 'Select Item...'}
@@ -90,10 +99,16 @@ export function HomeSummary({ summary, selectedItem, items, onSelectItem, daysPr
       </div>
       <div className={styles.filter}>
         <div>
-          <Button onClick={handleClickDays}>{daysPriorSelected.label}</Button>
+          <Button onClick={handleClickDays} disabled={!summary}>
+            {daysPriorSelected.label}
+          </Button>
           <Menu open={openDays} anchorEl={anchorElDays} onClose={handleCloseDays}>
             <For each={daysOptions}>
-              {(dayOption) => <MenuItem onClick={() => selectDaysPrior(dayOption)}>{dayOption.label}</MenuItem>}
+              {(dayOption) => (
+                <MenuItem onClick={() => selectDaysPrior(dayOption)}>
+                  {dayOption.label}
+                </MenuItem>
+              )}
             </For>
           </Menu>
         </div>

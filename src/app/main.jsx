@@ -11,7 +11,11 @@ import { createTheme, CssBaseline, ThemeProvider } from '@mui/material';
 import { BrowserRouter } from 'react-router-dom';
 import { RecoilRoot } from 'recoil';
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {},
+  },
+});
 
 const themeOptions = createTheme({});
 
