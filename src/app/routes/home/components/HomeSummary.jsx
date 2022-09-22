@@ -1,10 +1,10 @@
 import styles from './home-summary.module.scss';
-import { Button, Divider, IconButton, Menu, MenuItem } from '@mui/material';
+import { Button, Divider, IconButton, Menu, MenuItem, Tooltip } from '@mui/material';
 import { useState } from 'react';
 import { ExpandMore } from '@mui/icons-material';
 import { For } from '../../../components/For';
 
-export function HomeSummary({ summary, selectedItem, items, onSelectItem }) {
+export function HomeSummary({ summary, selectedItem, items, onSelectItem, daysPriorSelected, onSelectDaysPrior }) {
   const [anchorElDays, setAnchorElDays] = useState(null);
   const openDays = Boolean(anchorElDays);
   const handleClickDays = (event) => {
@@ -26,6 +26,17 @@ export function HomeSummary({ summary, selectedItem, items, onSelectItem }) {
     onSelectItem(item);
     handleCloseItems();
   };
+  const selectDaysPrior = (daysPrior) => {
+    onSelectDaysPrior(daysPrior);
+    handleCloseDays();
+  };
+  const daysOptions = [
+    { daysPrior: 2, label: 'Last 2 days' },
+    { daysPrior: 5, label: 'Last 5 days' },
+    { daysPrior: 7, label: 'Last 7 days' },
+    { daysPrior: 15, label: 'Last 15 days' },
+    { daysPrior: 30, label: 'Last 30 days' },
+  ];
 
   return (
     <div className={styles.homeSummary}>
@@ -54,13 +65,36 @@ export function HomeSummary({ summary, selectedItem, items, onSelectItem }) {
             <div className={styles.boxTitle}>Runs</div>
             <div className={styles.boxValue}>{summary?.runCount ?? '?'}</div>
           </div>
+
+          <div className={styles.boxDivider}>
+            <Divider orientation={'vertical'}></Divider>
+          </div>
+
+          <div className={styles.box}>
+            <Tooltip title={'Active Schedules'} placement={'right'}>
+              <div className={styles.boxTitle}>Active Schedules</div>
+            </Tooltip>
+            <div className={styles.boxValue}>{summary?.scheduleActiveCount ?? '?'}</div>
+          </div>
+          <div className={styles.boxDivider}>
+            <Divider orientation={'vertical'}></Divider>
+          </div>
+
+          <div className={styles.box}>
+            <Tooltip title={'Average Runtime'} placement={'right'}>
+              <div className={styles.boxTitle}>Avg Runtime</div>
+            </Tooltip>
+            <div className={styles.boxValue}>{summary?.averageQueryRuntime ?? '?'}</div>
+          </div>
         </div>
       </div>
       <div className={styles.filter}>
         <div>
-          <Button onClick={handleClickDays}>Last 7 Days</Button>
+          <Button onClick={handleClickDays}>{daysPriorSelected.label}</Button>
           <Menu open={openDays} anchorEl={anchorElDays} onClose={handleCloseDays}>
-            <MenuItem onClick={handleCloseDays}>Last 14 Days</MenuItem>
+            <For each={daysOptions}>
+              {(dayOption) => <MenuItem onClick={() => selectDaysPrior(dayOption)}>{dayOption.label}</MenuItem>}
+            </For>
           </Menu>
         </div>
       </div>
