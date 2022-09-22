@@ -12,16 +12,23 @@ export interface MethodMetadata {
   path: string;
   parameters: Array<ParameterMetadata | undefined>;
   code: StatusCodes;
+  summary?: string;
+  description?: string;
 }
 
 export interface ControllerMetadata {
   target: any;
   path: string;
   methods: Map<string, MethodMetadata>;
+  summary?: string;
+}
+
+interface ControllerOptions {
+  summary?: string;
 }
 
 interface Controller {
-  (path: string): ClassDecorator;
+  (path: string, options?: ControllerOptions): ClassDecorator;
   upsertMetadata(target: any, update: (metadata: ControllerMetadata) => ControllerMetadata): void;
   upsertMethodMetadata(target: any, propertyKey: string, update: (metadata: MethodMetadata) => MethodMetadata): void;
   getMetadata(target: any): ControllerMetadata | null;
@@ -47,9 +54,9 @@ const upsertMethodMetadata: Controller['upsertMethodMetadata'] = (target, proper
 };
 const getMetadata: Controller['getMetadata'] = (target) => metadataStore.get(target) ?? null;
 
-function ControllerInternal(path: string): ClassDecorator {
+function ControllerInternal(path: string, options?: ControllerOptions): ClassDecorator {
   return (target) => {
-    upsertMetadata(target, (metadata) => ({ ...metadata, path }));
+    upsertMetadata(target, (metadata) => ({ ...metadata, path, summary: options?.summary }));
   };
 }
 

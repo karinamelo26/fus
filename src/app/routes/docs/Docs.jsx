@@ -1,13 +1,15 @@
-import { useDocsState } from './docs.state';
+import { DocsSelectors, useDocsState } from './docs.state';
 import { api } from '../../api/api';
 import { useEffect } from 'react';
 import { Typography } from '@mui/material';
 import { For } from '../../components/For';
 import { DocsController } from './components/DocsController';
 import { DocsControl } from './components/DocsControl';
+import { useRecoilValue } from 'recoil';
 
 export function Docs() {
-  const { controllers, setControllers } = useDocsState();
+  const { setControllers } = useDocsState();
+  const controllers = useRecoilValue(DocsSelectors.getControllers);
 
   async function fetchDocs() {
     const _controllers = await api('docs/get-all', {});

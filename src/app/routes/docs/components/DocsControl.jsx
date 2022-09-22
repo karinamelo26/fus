@@ -1,10 +1,12 @@
 import { debounce, IconButton, InputAdornment, TextField, Tooltip } from '@mui/material';
 import { ArrowDownward, ArrowUpward, Search } from '@mui/icons-material';
 import styles from './DocsControl.module.scss';
-import { useDocsState } from '../docs.state';
+import { DocsSelectors, useDocsState } from '../docs.state';
+import { useRecoilValue } from 'recoil';
 
 export function DocsControl() {
-  const { setTerm, orderByDirection, setOrderByDirection } = useDocsState();
+  const { setTerm, setOrderByDirection } = useDocsState();
+  const orderByDirection = useRecoilValue(DocsSelectors.getOrderByDirection);
 
   const onChange = debounce((value) => {
     setTerm(value);

@@ -11,9 +11,14 @@ export function DocsController({ controller }) {
     <Accordion expanded={!controller.collapsed}>
       <AccordionSummary
         expandIcon={<ExpandMore></ExpandMore>}
-        onClick={() => updateController(controller.name, { collapsed: !controller.collapsed })}
+        onClick={() => updateController(controller.path, { collapsed: !controller.collapsed })}
       >
-        <Typography>{controller.name}</Typography>
+        <Typography variant="h6">
+          {controller.name}
+          <Typography marginLeft={'1rem'} variant="caption">
+            {controller.summary}
+          </Typography>
+        </Typography>
       </AccordionSummary>
       <AccordionDetails>
         <For each={controller.methods} trackBy="path">

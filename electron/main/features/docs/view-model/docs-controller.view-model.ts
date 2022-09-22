@@ -4,4 +4,5 @@ export class DocsControllerViewModel {
   name!: string;
   path!: string;
   methods!: DocsMethodViewModel[];
+  summary?: string;
 }

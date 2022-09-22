@@ -20,14 +20,18 @@ export class DocsService {
     const methods: DocsMethodViewModel[] = [];
     for (const [, methodMetadata] of metadata.methods) {
       methods.push({
+        controllerPath: metadata.path,
         path: `${metadata.path}/${methodMetadata.path}`,
         responses: [],
+        summary: methodMetadata.summary,
+        description: methodMetadata.description,
       });
     }
     return {
       name: controller.name.replace(/Controller$/, ''),
       path: metadata.path,
       methods,
+      summary: metadata.summary,
     };
   }
 

@@ -12,11 +12,11 @@ import { DatabaseAllSummaryViewModel } from './view-model/database-all-summary.v
 import { DatabaseSummaryViewModel } from './view-model/database-summary.view-model';
 import { DatabaseViewModel } from './view-model/database.view-model';
 
-@Controller('database')
+@Controller('database', { summary: 'All related to the database table' })
 export class DatabaseController {
   constructor(private readonly databaseService: DatabaseService) {}
 
-  @Method('get-all')
+  @Method('get-all', { summary: 'Get all databases' })
   async getAll(@Data() dto: GetAllDto): Promise<DatabaseViewModel[]> {
     return this.databaseService.getAll(dto);
   }
