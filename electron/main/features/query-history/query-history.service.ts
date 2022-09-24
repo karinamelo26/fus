@@ -1,9 +1,12 @@
 import { Prisma, QueryHistory } from '@prisma/client';
 import { subDays } from 'date-fns';
+import { random, round, sample } from 'st-utils';
 
 import { Injectable } from '../../di/injectable';
+import { randomDate } from '../../util/random-date';
 
 import { AddDto } from './dto/add.dto';
+import { GenerateMockDataDto } from './dto/generate-mock-data.dto';
 import { GetHistoryDto } from './dto/get-history.dto';
 import { QueryHistoryRepository } from './query-history.repository';
 
@@ -38,5 +41,32 @@ export class QueryHistoryService {
         mode: dto.mode,
       },
     });
+  }
+
+  async generateMockData(dto: GenerateMockDataDto): Promise<void> {
+    const items: Omit<QueryHistory, 'id' | 'inactiveAt' | 'message'>[] = Array.from(
+      { length: dto.quantity },
+      () => {
+        const idSchedule = sample(dto.idsSchedules);
+        const createdAt = randomDate(dto.from, dto.to);
+        const updatedAt = createdAt;
+        const query = 'select *';
+        const code = sample([0, 0, 0, 0, 1, 2, 3, 4, 5]);
+        const queryTime = round(random(50, 2500) + Math.random());
+        const mode = 0;
+        return {
+          createdAt,
+          updatedAt,
+          code,
+          idSchedule,
+          mode,
+          query,
+          queryTime,
+        };
+      }
+    );
+    await Promise.all(
+      items.map((item) => this.queryHistoryRepository.create({ data: item }))
+    );
   }
 }
