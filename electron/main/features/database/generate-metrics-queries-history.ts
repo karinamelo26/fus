@@ -11,11 +11,16 @@ export function generateMetricsQueriesHistory(
   const queriesHistorySuccess = queriesHistory.filter(
     (queryHistory) => queryHistory.code === QueryHistoryCodeEnum.Success
   );
+  const averageQueryRuntimeMs = queriesHistorySuccess.length
+    ? round(sumBy(queriesHistorySuccess, 'queryTime') / queriesHistorySuccess.length)
+    : 0;
   return {
     runCount: queriesHistory.length,
-    successRate: queriesHistory.length ? round((queriesHistorySuccess.length / queriesHistory.length) * 100) : 0,
-    averageQueryRuntime: queriesHistorySuccess.length
-      ? round(sumBy(queriesHistorySuccess, 'queryTime') / queriesHistorySuccess.length)
+    successRate: queriesHistory.length
+      ? Math.trunc((queriesHistorySuccess.length / queriesHistory.length) * 100)
+      : 0,
+    averageQueryRuntime: averageQueryRuntimeMs
+      ? round(averageQueryRuntimeMs / 1000, 1)
       : 0,
   };
 }
