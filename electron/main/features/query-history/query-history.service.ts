@@ -47,7 +47,7 @@ export class QueryHistoryService {
     const items: Omit<QueryHistory, 'id' | 'inactiveAt' | 'message'>[] = Array.from(
       { length: dto.quantity },
       () => {
-        const idSchedule = sample(dto.idsSchedules);
+        const idSchedule = sample(dto.idSchedules);
         const createdAt = randomDate(dto.from, dto.to);
         const updatedAt = createdAt;
         const query = 'select *';
