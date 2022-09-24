@@ -1,0 +1,12 @@
+.loading {
+  position: fixed;
+  top: -5px;
+  left: 0;
+  right: 0;
+  z-index: 1;
+  transition: top 400ms ease;
+
+  &.show {
+    top: 0;
+  }
+}

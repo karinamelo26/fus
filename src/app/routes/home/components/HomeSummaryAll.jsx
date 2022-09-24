@@ -1,14 +1,16 @@
 import { HomeSummary } from './HomeSummary';
 import { Show } from '../../../components/Show';
 import { useQuery } from '@tanstack/react-query';
-import { api } from '../../../api/api';
 import { useState } from 'react';
+import { useApi } from '../../../api/api';
 
 export function HomeSummaryAll() {
   const [selectedDaysPriorAll, setSelectedDaysPriorAll] = useState({
     daysPrior: 30,
     label: 'Last 30 days',
   });
+
+  const api = useApi();
 
   const summaryAllQuery = useQuery(
     ['summaryAll', selectedDaysPriorAll],

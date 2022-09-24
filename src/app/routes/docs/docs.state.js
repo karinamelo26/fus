@@ -43,7 +43,8 @@ export function useDocsState() {
     updateController,
     updateMethod,
     setTerm: (_term) => setDocs((docs) => ({ ...docs, term: _term })),
-    setOrderByDirection: (_orderByDirection) => setDocs((docs) => ({ ...docs, orderByDirection: _orderByDirection })),
+    setOrderByDirection: (_orderByDirection) =>
+      setDocs((docs) => ({ ...docs, orderByDirection: _orderByDirection })),
   };
 }
 
@@ -53,7 +54,7 @@ function normalizeSearch(str) {
 
 const searchFnsMethods = [(method) => method.path, (method) => method.description];
 
-export const DocsSelectors = {
+export const DocsStateSelectors = {
   getControllers: selector({
     key: `${StateKeysEnum.docs}_Selectors_getControllers`,
     get: ({ get }) => {
@@ -64,7 +65,9 @@ export const DocsSelectors = {
           .map((controller) => ({
             ...controller,
             methods: controller.methods.filter((method) =>
-              searchFnsMethods.some((searchFn) => normalizeSearch(searchFn(method)).includes(term))
+              searchFnsMethods.some((searchFn) =>
+                normalizeSearch(searchFn(method)).includes(term)
+              )
             ),
           }))
           .filter((controller) => controller.methods.length);

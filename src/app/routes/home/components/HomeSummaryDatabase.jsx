@@ -1,10 +1,12 @@
 import { HomeSummary } from './HomeSummary';
 import { Show } from '../../../components/Show';
 import { useQuery } from '@tanstack/react-query';
-import { api } from '../../../api/api';
+import { useApi } from '../../../api/api';
 import { useState } from 'react';
 
 export function HomeSummaryDatabase() {
+  const api = useApi();
+
   const allDatabases = useQuery(['allDatabases'], () =>
     api('database/get-all', { active: true })
   );

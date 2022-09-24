@@ -1,5 +1,6 @@
 import { dateInterceptor } from './date.interceptor';
-import { round } from 'st-utils';
+import { random, round } from 'st-utils';
+import { useLoadingState } from '../components/LoadingBar/loading-bar.state';
 
 /**
  * @typedef {object} Response
@@ -13,13 +14,13 @@ import { round } from 'st-utils';
  *
  * @type {Record<string, (...args: any[]) => Promise<any>>}
  */
-let apiInternal;
+let apiBackEnd;
 async function resolveApi() {
-  if (!apiInternal) {
+  if (!apiBackEnd) {
     await window['api-ready']();
-    apiInternal = window['api-internal'];
+    apiBackEnd = window['api-internal'];
   }
-  return apiInternal;
+  return apiBackEnd;
 }
 
 /**
@@ -67,14 +68,14 @@ const responseInterceptor = interceptors
  * @param {T} data
  * @returns {Promise<R>}
  */
-export async function api(path, data) {
+async function apiInternal(path, data) {
   /* eslint-disable no-console */
   await resolveApi();
   /**
    * @type {Response}
    */
   let result;
-  if (!apiInternal) {
+  if (!apiBackEnd) {
     throw {
       success: false,
       statusCode: 500,
@@ -85,7 +86,7 @@ export async function api(path, data) {
   const startMs = import.meta.env.DEV ? performance.now() : 0;
   const req = requestInterceptors.reduce((acc, item) => item(acc), { path, data });
   import.meta.env.DEV && console.log(`[${path}] Request`, req.data);
-  const method = apiInternal[req.path];
+  const method = apiBackEnd[req.path];
   if (!method) {
     result = {
       success: false,
@@ -95,6 +96,10 @@ export async function api(path, data) {
     };
   } else {
     try {
+      // Delay the request to test stuff
+      if (import.meta.env.DEV) {
+        await new Promise((resolve) => setTimeout(resolve, random(250, 1500)));
+      }
       /**
        * @type {Response}
        */
@@ -114,10 +119,35 @@ export async function api(path, data) {
       };
     }
   }
-  import.meta.env.DEV && console.log(`[${path}] Request time`, `${round(performance.now() - startMs)}ms`);
+  import.meta.env.DEV &&
+    console.log(`[${path}] Request time`, `${round(performance.now() - startMs)}ms`);
   /* eslint-enable no-console */
   if (result.success) {
     return result.data;
   }
   throw result;
+}
+
+/**
+ * @typedef ApiFunction
+ * @template T, R
+ * @function
+ * @param {string} path
+ * @param {T} data
+ * @returns {Promise<R>}
+ */
+
+/**
+ * @template T, R
+ * @returns {ApiFunction}
+ */
+export function useApi() {
+  const { showLoading, hideLoading } = useLoadingState();
+
+  return async (path, data) => {
+    showLoading();
+    return apiInternal(path, data).finally(() => {
+      hideLoading();
+    });
+  };
 }
