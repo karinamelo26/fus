@@ -2,6 +2,7 @@ import { Accordion, AccordionDetails, AccordionSummary, Typography } from '@mui/
 import { useDocsState } from '../docs.state';
 import { ExpandMore } from '@mui/icons-material';
 import styles from './DocsMethod.module.scss';
+import { DocsMethodDetails } from './DocsMethodDetails';
 
 export function DocsMethod({ method }) {
   const { updateMethod } = useDocsState();
@@ -10,7 +11,11 @@ export function DocsMethod({ method }) {
     <Accordion expanded={!method.collapsed}>
       <AccordionSummary
         expandIcon={<ExpandMore></ExpandMore>}
-        onClick={() => updateMethod(method.controllerPath, method.path, { collapsed: !method.collapsed })}
+        onClick={() =>
+          updateMethod(method.controllerPath, method.path, {
+            collapsed: !method.collapsed,
+          })
+        }
       >
         <Typography variant="subtitle2">
           {method.path}
@@ -20,10 +25,7 @@ export function DocsMethod({ method }) {
         </Typography>
       </AccordionSummary>
       <AccordionDetails>
-        <div>Request body</div>
-        <div>Execute button (enabled when all fields required were filled)</div>
-        <div>Possible Responses</div>
-        <div>actual Response</div>
+        <DocsMethodDetails method={method}></DocsMethodDetails>
       </AccordionDetails>
     </Accordion>
   );

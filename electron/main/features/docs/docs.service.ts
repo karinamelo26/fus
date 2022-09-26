@@ -1,7 +1,10 @@
+import { getReasonPhrase } from 'http-status-codes';
+import { isNotNil } from 'st-utils';
 import { Class } from 'type-fest';
 
 import { Controller } from '../../api/controller';
 import { InternalServerErrorException } from '../../api/exception';
+import { fromModelToExample } from '../../api/from-model-to-example';
 import { ModuleResolver } from '../../api/module-resolver';
 import { Injectable } from '../../di/injectable';
 
@@ -19,12 +22,18 @@ export class DocsService {
     }
     const methods: DocsMethodViewModel[] = [];
     for (const [, methodMetadata] of metadata.methods) {
+      const parameterMetadata = methodMetadata.parameters.find(isNotNil);
       methods.push({
         controllerPath: metadata.path,
         path: `${metadata.path}/${methodMetadata.path}`,
-        responses: [],
+        responses: (methodMetadata.responses ?? []).map((response) => ({
+          status: response.status,
+          statusMessage: getReasonPhrase(response.status),
+          example: fromModelToExample(response.data?.(), response.isArray),
+        })),
         summary: methodMetadata.summary,
         description: methodMetadata.description,
+        request: fromModelToExample(parameterMetadata?.type, parameterMetadata?.isArray),
       });
     }
     return {

@@ -14,6 +14,13 @@ export interface MethodMetadata {
   code: StatusCodes;
   summary?: string;
   description?: string;
+  responses?: MethodMetadataResponse[];
+}
+
+export interface MethodMetadataResponse {
+  status: StatusCodes;
+  data?: () => any;
+  isArray: boolean;
 }
 
 export interface ControllerMetadata {
@@ -29,8 +36,15 @@ interface ControllerOptions {
 
 interface Controller {
   (path: string, options?: ControllerOptions): ClassDecorator;
-  upsertMetadata(target: any, update: (metadata: ControllerMetadata) => ControllerMetadata): void;
-  upsertMethodMetadata(target: any, propertyKey: string, update: (metadata: MethodMetadata) => MethodMetadata): void;
+  upsertMetadata(
+    target: any,
+    update: (metadata: ControllerMetadata) => ControllerMetadata
+  ): void;
+  upsertMethodMetadata(
+    target: any,
+    propertyKey: string,
+    update: (metadata: MethodMetadata) => MethodMetadata
+  ): void;
   getMetadata(target: any): ControllerMetadata | null;
 }
 
@@ -40,7 +54,11 @@ const upsertMetadata: Controller['upsertMetadata'] = (target, update) => {
   const metadata = metadataStore.get(target) ?? { target, path: '', methods: new Map() };
   metadataStore.set(target, update(metadata));
 };
-const upsertMethodMetadata: Controller['upsertMethodMetadata'] = (target, propertyKey, update) => {
+const upsertMethodMetadata: Controller['upsertMethodMetadata'] = (
+  target,
+  propertyKey,
+  update
+) => {
   upsertMetadata(target, (metadata) => {
     const method = metadata.methods.get(propertyKey) ?? {
       propertyKey,
@@ -52,11 +70,16 @@ const upsertMethodMetadata: Controller['upsertMethodMetadata'] = (target, proper
     return metadata;
   });
 };
-const getMetadata: Controller['getMetadata'] = (target) => metadataStore.get(target) ?? null;
+const getMetadata: Controller['getMetadata'] = (target) =>
+  metadataStore.get(target) ?? null;
 
 function ControllerInternal(path: string, options?: ControllerOptions): ClassDecorator {
   return (target) => {
-    upsertMetadata(target, (metadata) => ({ ...metadata, path, summary: options?.summary }));
+    upsertMetadata(target, (metadata) => ({
+      ...metadata,
+      path,
+      summary: options?.summary,
+    }));
   };
 }
 

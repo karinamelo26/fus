@@ -6,6 +6,13 @@ export interface MethodOptions {
   code?: StatusCodes;
   summary?: string;
   description?: string;
+  responses?: MethodResponse[];
+}
+
+interface MethodResponse {
+  status: StatusCodes;
+  data?: () => any;
+  isArray?: boolean;
 }
 
 export function Method(path: string, options?: MethodOptions): MethodDecorator {
@@ -17,6 +24,10 @@ export function Method(path: string, options?: MethodOptions): MethodDecorator {
       code: options?.code ?? metadata.code,
       summary: options?.summary,
       description: options?.description,
+      responses: (options?.responses ?? []).map((response) => ({
+        ...response,
+        isArray: !!response.isArray,
+      })),
     }));
   };
 }

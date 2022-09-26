@@ -1,3 +1,5 @@
+import { StatusCodes } from 'http-status-codes';
+
 import { Controller } from '../../api/controller';
 import { Data } from '../../api/data';
 import { Method } from '../../api/method';
@@ -16,7 +18,13 @@ import { DatabaseViewModel } from './view-model/database.view-model';
 export class DatabaseController {
   constructor(private readonly databaseService: DatabaseService) {}
 
-  @Method('get-all', { summary: 'Get all databases' })
+  @Method('get-all', {
+    summary: 'Get all databases',
+    responses: [
+      { status: StatusCodes.OK, data: () => DatabaseViewModel, isArray: true },
+      { status: StatusCodes.NOT_FOUND },
+    ],
+  })
   async getAll(@Data() dto: GetAllDto): Promise<DatabaseViewModel[]> {
     return this.databaseService.getAll(dto);
   }
@@ -32,7 +40,9 @@ export class DatabaseController {
   }
 
   @Method('get-all-summary')
-  async getAllSummary(@Data() dto: GetAllSummaryDto): Promise<DatabaseAllSummaryViewModel> {
+  async getAllSummary(
+    @Data() dto: GetAllSummaryDto
+  ): Promise<DatabaseAllSummaryViewModel> {
     return this.databaseService.getAllSummary(dto);
   }
 
