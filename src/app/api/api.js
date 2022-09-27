@@ -1,5 +1,5 @@
 import { dateInterceptor } from './date.interceptor';
-import { random, round } from 'st-utils';
+import { round } from 'st-utils';
 import { useLoadingState } from '../components/LoadingBar/loading-bar.state';
 
 /**
@@ -63,12 +63,21 @@ const responseInterceptor = interceptors
   .map((interceptor) => interceptor.response);
 
 /**
+ * @typedef {object} ApiOptions
+ * @property {boolean} [ignoreInterceptors]
+ * @property {boolean} [ignoreRequestInterceptors]
+ * @property {boolean} [ignoreResponseInterceptors]
+ * @property {boolean} [fullResponse]
+ */
+
+/**
  * @template T, R
  * @param {string} path
  * @param {T} data
+ * @param {ApiOptions} [options]
  * @returns {Promise<R>}
  */
-async function apiInternal(path, data) {
+async function apiInternal(path, data, options = {}) {
   /* eslint-disable no-console */
   await resolveApi();
   /**
@@ -84,7 +93,10 @@ async function apiInternal(path, data) {
     };
   }
   const startMs = import.meta.env.DEV ? performance.now() : 0;
-  const req = requestInterceptors.reduce((acc, item) => item(acc), { path, data });
+  let req = { path, data };
+  if (!options.ignoreInterceptors && !options.ignoreRequestInterceptors) {
+    req = requestInterceptors.reduce((acc, item) => item(acc), req);
+  }
   import.meta.env.DEV && console.log(`[${path}] Request`, req.data);
   const method = apiBackEnd[req.path];
   if (!method) {
@@ -97,17 +109,19 @@ async function apiInternal(path, data) {
   } else {
     try {
       // Delay the request to test stuff
-      if (import.meta.env.DEV) {
-        await new Promise((resolve) => setTimeout(resolve, random(250, 1500)));
-      }
+      // if (import.meta.env.DEV) {
+      //   await new Promise((resolve) => setTimeout(resolve, random(250, 1500)));
+      // }
       /**
        * @type {Response}
        */
-      const originalResult = await method(req.data);
-      result = {
-        ...originalResult,
-        data: responseInterceptor.reduce((acc, item) => item(acc), originalResult.data),
-      };
+      result = await method(req.data);
+      if (!options.ignoreInterceptors && !options.ignoreResponseInterceptors) {
+        result = {
+          ...result,
+          data: responseInterceptor.reduce((acc, item) => item(acc), result.data),
+        };
+      }
       import.meta.env.DEV && console.log(`[${path}] Response`, result);
     } catch (error) {
       console.error(error);
@@ -123,6 +137,9 @@ async function apiInternal(path, data) {
     console.log(`[${path}] Request time`, `${round(performance.now() - startMs)}ms`);
   /* eslint-enable no-console */
   if (result.success) {
+    if (options.fullResponse) {
+      return result;
+    }
     return result.data;
   }
   throw result;
@@ -139,14 +156,15 @@ async function apiInternal(path, data) {
 
 /**
  * @template T, R
+ * @param {ApiOptions} [options]
  * @returns {ApiFunction}
  */
-export function useApi() {
+export function useApi(options = {}) {
   const { showLoading, hideLoading } = useLoadingState();
 
   return async (path, data) => {
     showLoading();
-    return apiInternal(path, data).finally(() => {
+    return apiInternal(path, data, options).finally(() => {
       hideLoading();
     });
   };

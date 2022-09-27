@@ -1,4 +1,4 @@
-import { Fragment } from 'react';
+import { Fragment, useEffect } from 'react';
 import { isFunction } from 'st-utils';
 
 /**
@@ -60,6 +60,13 @@ export function For({ each, fallback, children, trackBy }) {
     const options = getItemExtras(item, index);
     return <Fragment key={options.key}>{children(item, options)}</Fragment>;
   }
+
+  useEffect(() => {
+    if (!trackBy) {
+      // eslint-disable-next-line no-console
+      console.warn('trackBy should be used to avoid unnecessary re-renders');
+    }
+  }, [trackBy]);
 
   return each ? each.map((item, index) => getItem(item, index)) : fallback;
 }
