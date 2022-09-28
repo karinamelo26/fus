@@ -34,12 +34,13 @@ const indexHtml = join(DIST_PATH, 'index.html');
 
 async function createWindow(): Promise<void> {
   if (devMode) {
-    const extensions = {
-      redux: 'lmhkpmbekcpmknklioeibfkpmmfibljd',
-      react: 'fmkadmapgofadopljbjfkapdkoienihi',
-    };
-    const { default: electronDevToolsInstaller } = await import('electron-devtools-installer');
-    await electronDevToolsInstaller(Object.values(extensions));
+    // const extensions = {
+    //   redux: 'lmhkpmbekcpmknklioeibfkpmmfibljd',
+    //   react: 'fmkadmapgofadopljbjfkapdkoienihi',
+    // };
+    // const { default: electronDevToolsInstaller } = await import('electron-devtools-installer');
+    // await electronDevToolsInstaller(Object.values(extensions));
+    // TODO investigate not working well on mac
   }
 
   win = new BrowserWindow({
@@ -69,7 +70,9 @@ async function createWindow(): Promise<void> {
     await executeMigrations(`file:${configService.databasePath}`);
   }
 
-  const api = await bootstrap(ApiModule, [{ provide: ConfigService, useValue: configService }]);
+  const api = await bootstrap(ApiModule, [
+    { provide: ConfigService, useValue: configService },
+  ]);
   win.webContents.send('init-api', api.getPaths());
 
   // Test actively push message to the Electron-Renderer

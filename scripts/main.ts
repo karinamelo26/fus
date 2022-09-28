@@ -68,11 +68,15 @@ function build(): PluginOption {
       logger.log('Building electron');
       logger.log('Bundling with esbuild');
       await esbuild(getEsbuildConfig(config?.isProduction));
-      logger.log('Finished esbuild bundling', ...calculateAndFormatPerformanceTime(startMs, performance.now()));
+      logger.log(
+        'Finished esbuild bundling',
+        ...calculateAndFormatPerformanceTime(startMs, performance.now())
+      );
       logger.log('Copying files to build');
       const packageJsonPath = join(process.cwd(), 'package.json');
       const packageJsonFile = await readFile(packageJsonPath, { encoding: 'utf8' });
-      const packageJson: PackageJson & Record<string, unknown> = JSON.parse(packageJsonFile);
+      const packageJson: PackageJson & Record<string, unknown> =
+        JSON.parse(packageJsonFile);
       // Prisma is not customized in production code
       packageJson.prisma = undefined;
       // Assertion here because we certainly have scripts in our package.json
@@ -83,18 +87,27 @@ function build(): PluginOption {
       packageJson.engines = undefined;
       await Promise.all([
         // Add modified package.json do dist
-        writeFile(join(DIST_ELECTRON_PATH, 'main', 'package.json'), JSON.stringify(packageJson)),
+        writeFile(
+          join(DIST_ELECTRON_PATH, 'main', 'package.json'),
+          JSON.stringify(packageJson)
+        ),
         // Copy prisma schema to dist
         copyFile(
           join(ELECTRON_PATH, 'main', 'prisma', 'schema.prisma'),
           join(DIST_ELECTRON_PATH, 'main', 'schema.prisma')
         ),
         // Copy migrations folder to dist
-        copy(join(ELECTRON_PATH, 'main', 'prisma', 'migrations'), join(DIST_ELECTRON_PATH, 'main', 'migrations')),
+        copy(
+          join(ELECTRON_PATH, 'main', 'prisma', 'migrations'),
+          join(DIST_ELECTRON_PATH, 'main', 'migrations')
+        ),
         // Copy prisma binaries to dist
         downloadPrismaBinaries(),
       ]);
-      logger.log('Build completed!', ...calculateAndFormatPerformanceTime(startMs, performance.now()));
+      logger.log(
+        'Build completed!',
+        ...calculateAndFormatPerformanceTime(startMs, performance.now())
+      );
     },
   };
 }
@@ -115,7 +128,10 @@ function serve(): PluginOption {
         }
         server.ws.send({ type: 'full-reload' });
         logger.log('Opening electron app');
-        electronApp = spawn(electronPath, ['.'], { stdio: 'inherit', env: process.env });
+        electronApp = spawn(electronPath, ['.', '--trace'], {
+          stdio: 'inherit',
+          env: process.env,
+        });
         electronApp.on('error', () => {
           onError();
         });
@@ -149,7 +165,10 @@ function serve(): PluginOption {
           incremental: true,
         });
         const endMs = performance.now();
-        logger.log('Finished building', ...calculateAndFormatPerformanceTime(startMs, endMs));
+        logger.log(
+          'Finished building',
+          ...calculateAndFormatPerformanceTime(startMs, endMs)
+        );
         onRebuild();
         logger.log('Now watching for changes...');
       });
