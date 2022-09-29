@@ -3,6 +3,7 @@ import { Button, Divider, IconButton, Menu, MenuItem, Tooltip } from '@mui/mater
 import { useState } from 'react';
 import { ExpandMore } from '@mui/icons-material';
 import { For } from '../../../components/For';
+import { isNil } from 'st-utils';
 
 export function HomeSummary({
   summary,
@@ -64,7 +65,9 @@ export function HomeSummary({
         <div className={styles.boxes}>
           <div className={styles.box}>
             <div className={styles.boxTitle}>% Success</div>
-            <div className={styles.boxValue}>{summary?.successRate ?? '?'}%</div>
+            <div className={styles.boxValue}>
+              {!isNil(summary?.successRate) ? `${summary.successRate}%` : ''}
+            </div>
           </div>
           <div className={styles.boxDivider}>
             <Divider orientation={'vertical'}></Divider>
@@ -72,7 +75,7 @@ export function HomeSummary({
 
           <div className={styles.box}>
             <div className={styles.boxTitle}>Runs</div>
-            <div className={styles.boxValue}>{summary?.runCount ?? '?'}</div>
+            <div className={styles.boxValue}>{summary?.runCount}</div>
           </div>
 
           <div className={styles.boxDivider}>
@@ -83,7 +86,7 @@ export function HomeSummary({
             <Tooltip title={'Active Schedules'} placement={'right'}>
               <div className={styles.boxTitle}>Active Schedules</div>
             </Tooltip>
-            <div className={styles.boxValue}>{summary?.scheduleActiveCount ?? '?'}</div>
+            <div className={styles.boxValue}>{summary?.scheduleActiveCount}</div>
           </div>
           <div className={styles.boxDivider}>
             <Divider orientation={'vertical'}></Divider>
@@ -93,7 +96,11 @@ export function HomeSummary({
             <Tooltip title={'Average Runtime'} placement={'right'}>
               <div className={styles.boxTitle}>Avg Runtime</div>
             </Tooltip>
-            <div className={styles.boxValue}>{summary?.averageQueryRuntime ?? '?'}</div>
+            <div className={styles.boxValue}>
+              {!isNil(summary?.averageQueryRuntime)
+                ? `${summary.averageQueryRuntime}s`
+                : ''}
+            </div>
           </div>
         </div>
       </div>
@@ -103,7 +110,7 @@ export function HomeSummary({
             {daysPriorSelected.label}
           </Button>
           <Menu open={openDays} anchorEl={anchorElDays} onClose={handleCloseDays}>
-            <For each={daysOptions}>
+            <For each={daysOptions} trackBy={'daysPrior'}>
               {(dayOption) => (
                 <MenuItem onClick={() => selectDaysPrior(dayOption)}>
                   {dayOption.label}
