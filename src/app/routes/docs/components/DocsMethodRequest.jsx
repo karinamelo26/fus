@@ -1,6 +1,4 @@
-import { Alert, Box, Button, Divider, Stack, Typography } from '@mui/material';
-import Editor from 'react-simple-code-editor';
-import { highlight, languages } from 'prismjs/components/prism-core';
+import { Alert, Box, Button, Divider, Stack, TextField, Typography } from '@mui/material';
 import { useDocsState } from '../docs.state';
 import { Show } from '../../../components/Show';
 import { isArray, isDate, isObject } from 'st-utils';
@@ -84,12 +82,14 @@ export function DocsMethodRequest({ method }) {
           <Typography variant="h6">Request</Typography>
         </Divider>
       </Box>
-      <Editor
-        highlight={(code) => highlight(code, languages.json, 'json')}
+      <TextField
+        label="Request Data"
+        multiline
         value={method.requestEditable}
-        onValueChange={onCodeChange}
+        onChange={(event) => onCodeChange(event.target.value)}
         disabled={!method.isEditingRequest || method.isRequesting}
-      ></Editor>
+        fullWidth
+      ></TextField>
       <Show when={method.invalidPayload}>
         <Box sx={{ mt: 1 }}>
           <Alert severity="error">JSON is invalid</Alert>

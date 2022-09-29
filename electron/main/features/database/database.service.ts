@@ -1,3 +1,6 @@
+import { Prisma } from '@prisma/client';
+import { isNotNil } from 'st-utils';
+
 import { Injectable } from '../../di/injectable';
 import { fromEnumToIdName } from '../../shared/from-enum-to-id-name';
 import { IdNameViewModel } from '../../shared/view-model/id-name.view-model';
@@ -24,9 +27,13 @@ export class DatabaseService {
   ) {}
 
   async getAll(dto: GetAllDto): Promise<DatabaseViewModel[]> {
+    const where: Prisma.DatabaseWhereInput = {};
+    if (isNotNil(dto.active)) {
+      where.inactiveAt = null;
+    }
     const databases = await this.databaseRepository.findMany({
       include: { _count: { select: { schedule: true } } },
-      where: { inactiveAt: dto.active ? null : { not: null } },
+      where,
       orderBy: { createdAt: 'asc' },
     });
     return databases.map((database) => ({
@@ -49,13 +56,18 @@ export class DatabaseService {
         select: { name: true, schedule: { select: { inactiveAt: true } } },
         where: { id: dto.idDatabase },
       }),
-      this.queryHistoryService.getHistory({ idDatabase: dto.idDatabase, daysPrior: dto.daysPrior }),
+      this.queryHistoryService.getHistory({
+        idDatabase: dto.idDatabase,
+        daysPrior: dto.daysPrior,
+      }),
     ]);
     return {
       idDatabase: dto.idDatabase,
       databaseName: database.name,
-      scheduleActiveCount: database.schedule.filter((schedule) => !schedule.inactiveAt).length,
-      scheduleInactiveCount: database.schedule.filter((schedule) => schedule.inactiveAt).length,
+      scheduleActiveCount: database.schedule.filter((schedule) => !schedule.inactiveAt)
+        .length,
+      scheduleInactiveCount: database.schedule.filter((schedule) => schedule.inactiveAt)
+        .length,
       ...generateMetricsQueriesHistory(queriesHistory),
     };
   }

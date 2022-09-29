@@ -10,7 +10,6 @@ import '@fontsource/roboto/700.css';
 import { createTheme, CssBaseline, ThemeProvider } from '@mui/material';
 import { BrowserRouter } from 'react-router-dom';
 import { RecoilRoot } from 'recoil';
-import 'prismjs/components/prism-json';
 
 const queryClient = new QueryClient({
   defaultOptions: {

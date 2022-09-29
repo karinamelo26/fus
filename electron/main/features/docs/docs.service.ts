@@ -29,11 +29,13 @@ export class DocsService {
         responses: (methodMetadata.responses ?? []).map((response) => ({
           status: response.status,
           statusMessage: getReasonPhrase(response.status),
-          example: fromModelToExample(response.data?.(), response.isArray),
+          example: fromModelToExample(response.data?.(), { isArray: true }),
         })),
         summary: methodMetadata.summary,
         description: methodMetadata.description,
-        request: fromModelToExample(parameterMetadata?.type, parameterMetadata?.isArray),
+        request: fromModelToExample(parameterMetadata?.type, {
+          isArray: parameterMetadata?.isArray,
+        }),
       });
     }
     return {

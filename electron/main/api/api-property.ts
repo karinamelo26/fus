@@ -5,10 +5,12 @@ interface ApiPropertyOptions {
   isArray?: boolean;
   example?: () => any;
   optional?: boolean;
+  isEnum?: boolean;
 }
 
 export interface ApiPropertyMetadata {
   type: () => any;
+  isEnum: boolean;
   isArray: boolean;
   example?: () => any;
   optional: boolean;
@@ -42,6 +44,7 @@ function ApiPropertyInternal(options?: ApiPropertyOptions): PropertyDecorator {
       isArray: !!options?.isArray,
       example: options?.example,
       optional: !!options?.optional,
+      isEnum: !!options?.isEnum,
     });
   };
 }
