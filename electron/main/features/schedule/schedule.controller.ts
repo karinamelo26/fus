@@ -9,26 +9,38 @@ import { UpdateDto } from './dto/update.dto';
 import { ScheduleService } from './schedule.service';
 import { ScheduleViewModel } from './view-model/schedule.view-model';
 
-@Controller('schedule')
+@Controller('schedule', { summary: 'All related to schedules table' })
 export class ScheduleController {
   constructor(private readonly scheduleService: ScheduleService) {}
 
-  @Method('get-all')
+  @Method('get-all', {
+    summary: 'Get all schedules',
+    okResponse: { data: () => ScheduleViewModel, isArray: true },
+  })
   async getAll(@Data() dto: GetAllDto): Promise<ScheduleViewModel[]> {
     return this.scheduleService.getAll(dto);
   }
 
-  @Method('add')
+  @Method('add', {
+    summary: 'Add a new schedule',
+    okResponse: { data: () => ScheduleViewModel },
+  })
   async add(@Data() dto: AddDto): Promise<ScheduleViewModel> {
     return this.scheduleService.add(dto);
   }
 
-  @Method('update')
+  @Method('update', {
+    summary: 'Update a schedule',
+    okResponse: { data: () => ScheduleViewModel },
+  })
   async update(@Data() dto: UpdateDto): Promise<ScheduleViewModel> {
     return this.scheduleService.update(dto);
   }
 
-  @Method('execute')
+  @Method('execute', {
+    summary: 'Execute a schedule',
+    okResponse: { data: () => undefined },
+  })
   async execute(@Data() dto: ExecuteDto): Promise<void> {
     await this.scheduleService.execute(dto.idSchedule);
   }

@@ -38,12 +38,12 @@ function fromModelToExampleWithMetadata(
     if (propertyMetadata.optional) {
       property = `${property}?`;
     }
-    example[property] =
-      propertyMetadata.example?.() ??
-      fromModelToExample(type, {
-        isArray: propertyMetadata.isArray,
-        isEnum: propertyMetadata.isEnum,
-      });
+    example[property] = propertyMetadata.example
+      ? propertyMetadata.example()
+      : fromModelToExample(type, {
+          isArray: propertyMetadata.isArray,
+          isEnum: propertyMetadata.isEnum,
+        });
   }
   return isArray ? [example] : example;
 }

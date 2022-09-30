@@ -1,5 +1,3 @@
-import { StatusCodes } from 'http-status-codes';
-
 import { Controller } from '../../api/controller';
 import { Data } from '../../api/data';
 import { Method } from '../../api/method';
@@ -20,33 +18,42 @@ export class DatabaseController {
 
   @Method('get-all', {
     summary: 'Get all databases',
-    responses: [
-      { status: StatusCodes.OK, data: () => DatabaseViewModel, isArray: true },
-      { status: StatusCodes.NOT_FOUND },
-    ],
+    okResponse: { data: () => DatabaseViewModel, isArray: true },
   })
   async getAll(@Data() dto: GetAllDto): Promise<DatabaseViewModel[]> {
     return this.databaseService.getAll(dto);
   }
 
-  @Method('get-types')
+  @Method('get-types', {
+    summary: 'Get all types of databases',
+    okResponse: { data: () => IdNameViewModel, isArray: true },
+  })
   getTypes(): IdNameViewModel[] {
     return this.databaseService.getTypes();
   }
 
-  @Method('get-summary')
+  @Method('get-summary', {
+    summary: 'Get summary for a database',
+    okResponse: { data: () => DatabaseSummaryViewModel },
+  })
   async getSummary(@Data() dto: GetSummaryDto): Promise<DatabaseSummaryViewModel> {
     return this.databaseService.getSummary(dto);
   }
 
-  @Method('get-all-summary')
+  @Method('get-all-summary', {
+    summary: 'Get summary for all databases',
+    okResponse: { data: () => DatabaseAllSummaryViewModel },
+  })
   async getAllSummary(
     @Data() dto: GetAllSummaryDto
   ): Promise<DatabaseAllSummaryViewModel> {
     return this.databaseService.getAllSummary(dto);
   }
 
-  @Method('add')
+  @Method('add', {
+    summary: 'Add a new database',
+    okResponse: { data: () => DatabaseViewModel },
+  })
   async add(@Data() dto: AddDto): Promise<DatabaseViewModel> {
     return this.databaseService.add(dto);
   }

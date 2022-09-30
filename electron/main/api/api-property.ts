@@ -1,3 +1,6 @@
+import { isNotNil } from 'st-utils';
+
+import { mergeMaps } from '../util/merge-maps';
 import { ReflectMetadataTypesEnum } from '../util/reflect-metadata-types.enum';
 
 interface ApiPropertyOptions {
@@ -29,8 +32,15 @@ const upsertMetadata: ApiProperty['upsertMetadata'] = (target, propertyKey, data
   metadata.set(propertyKey, data);
   metadataStore.set(target, metadata);
 };
-const getMetadata: ApiProperty['getMetadata'] = (target) =>
-  metadataStore.get(target) ?? null;
+const getMetadata: ApiProperty['getMetadata'] = (target) => {
+  const prototype = isNotNil(target) && Object.getPrototypeOf(target);
+  const parentConstructor = prototype?.constructor;
+  const metadata = metadataStore.get(target);
+  const parentMetadata = metadataStore.get(parentConstructor);
+  const prototypeMetadata = metadataStore.get(prototype);
+  const newMap = mergeMaps([parentMetadata, prototypeMetadata, metadata]);
+  return newMap.size ? newMap : null;
+};
 
 function ApiPropertyInternal(options?: ApiPropertyOptions): PropertyDecorator {
   return (target, propertyKey) => {

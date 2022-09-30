@@ -5,7 +5,9 @@ import { Response } from '../main/api/response';
 
 import { formatResponse } from './format-response';
 
-function domReady(condition: DocumentReadyState[] = ['complete', 'interactive']): Promise<boolean> {
+function domReady(
+  condition: DocumentReadyState[] = ['complete', 'interactive']
+): Promise<boolean> {
   return new Promise((resolve) => {
     if (condition.includes(document.readyState)) {
       resolve(true);
@@ -105,6 +107,9 @@ const apiReadyPromise = new Promise<void>((resolve) => {
   apiReadyPromiseResolve = resolve;
 });
 
+// TODO improve this file
+// Sometimes we get an error on front-end
+
 contextBridge.exposeInMainWorld('api-ready', () => apiReadyPromise);
 
 ipcRenderer.on('init-api', (_, paths: string[]) => {
@@ -116,7 +121,9 @@ ipcRenderer.on('init-api', (_, paths: string[]) => {
         try {
           result = await ipcRenderer.invoke(path, ...args);
         } catch (error) {
-          result = new InternalServerErrorException(error?.message ?? error?.error ?? 'Unknown error');
+          result = new InternalServerErrorException(
+            error?.message ?? error?.error ?? 'Unknown error'
+          );
         }
         return formatResponse(result);
       },

@@ -21,6 +21,7 @@ export interface MethodMetadataResponse {
   status: StatusCodes;
   data?: () => any;
   isArray: boolean;
+  example?: () => any;
 }
 
 export interface ControllerMetadata {

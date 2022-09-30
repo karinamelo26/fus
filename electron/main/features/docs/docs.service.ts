@@ -29,7 +29,9 @@ export class DocsService {
         responses: (methodMetadata.responses ?? []).map((response) => ({
           status: response.status,
           statusMessage: getReasonPhrase(response.status),
-          example: fromModelToExample(response.data?.(), { isArray: true }),
+          example: response.example
+            ? response.example()
+            : fromModelToExample(response.data?.(), { isArray: response.isArray }),
         })),
         summary: methodMetadata.summary,
         description: methodMetadata.description,

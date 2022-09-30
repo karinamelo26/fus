@@ -9,7 +9,10 @@ import { QueryHistoryService } from './query-history.service';
 export class QueryHistoryController {
   constructor(private readonly queryHistoryService: QueryHistoryService) {}
 
-  @Method('generate-mock-data')
+  @Method('generate-mock-data', {
+    summary: 'Generate mock data',
+    okResponse: { example: () => undefined },
+  })
   async generateMockData(@Data() dto: GenerateMockDataDto): Promise<void> {
     await this.queryHistoryService.generateMockData(dto);
   }

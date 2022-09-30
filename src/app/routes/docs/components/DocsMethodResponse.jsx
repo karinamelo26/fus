@@ -14,7 +14,7 @@ export function DocsMethodResponse({ response }) {
       ></CardHeader>
       <CardContent style={{ backgroundColor: theme.palette.grey.A200 }}>
         <pre>
-          <Typography>{response.example}</Typography>
+          <Typography>{response.example ?? 'Empty response'}</Typography>
         </pre>
       </CardContent>
     </Card>
