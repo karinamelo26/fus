@@ -18,6 +18,11 @@ export class DatabaseController {
 
   @Method('get-all', {
     summary: 'Get all databases',
+    description: `Get all databases available registered by the user. 
+You can filter by "active":
+  - true will return all active
+  - false will return all inactive
+  - null or undefined will return all`,
     okResponse: { data: () => DatabaseViewModel, isArray: true },
   })
   async getAll(@Data() dto: GetAllDto): Promise<DatabaseViewModel[]> {

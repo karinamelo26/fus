@@ -1,4 +1,4 @@
-import { Divider, Typography } from '@mui/material';
+import { Box, Divider, Typography } from '@mui/material';
 import { For } from '../../../components/For';
 import styles from './DocsMethodDetails.module.scss';
 import { DocsMethodResponse } from './DocsMethodResponse';
@@ -13,7 +13,11 @@ export function DocsMethodDetails({ method }) {
           <Typography variant="h6">Responses</Typography>
         </Divider>
         <For each={method.responses} trackBy="status">
-          {(response) => <DocsMethodResponse response={response}></DocsMethodResponse>}
+          {(response) => (
+            <Box sx={{ mt: 2 }}>
+              <DocsMethodResponse response={response}></DocsMethodResponse>
+            </Box>
+          )}
         </For>
       </div>
     </>

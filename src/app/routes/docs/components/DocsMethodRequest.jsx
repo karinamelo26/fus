@@ -1,4 +1,4 @@
-import { Alert, Box, Button, Divider, Stack, TextField, Typography } from '@mui/material';
+import { Box, Button, Divider, Stack, TextField, Typography } from '@mui/material';
 import { useDocsState } from '../docs.state';
 import { Show } from '../../../components/Show';
 import { isArray, isDate, isObject } from 'st-utils';
@@ -26,8 +26,20 @@ export function DocsMethodRequest({ method }) {
     });
   }
 
+  function validateJSON(code) {
+    try {
+      const json = JSON.parse(code);
+      update({ invalidPayload: false });
+      return json;
+    } catch {
+      update({ invalidPayload: true });
+      return null;
+    }
+  }
+
   function onCodeChange(code) {
     update({ requestEditable: code });
+    validateJSON(code);
   }
 
   function removeOptionalFromKeys(value) {
@@ -49,14 +61,11 @@ export function DocsMethodRequest({ method }) {
 
   function validateRequest() {
     const { requestEditable } = method;
-    try {
-      const json = JSON.parse(requestEditable);
-      update({ invalidPayload: false });
-      return removeOptionalFromKeys(json);
-    } catch {
-      update({ invalidPayload: true });
+    const json = validateJSON(requestEditable);
+    if (!json) {
       return null;
     }
+    return removeOptionalFromKeys(json);
   }
 
   async function onExecute() {
@@ -88,35 +97,10 @@ export function DocsMethodRequest({ method }) {
         value={method.requestEditable}
         onChange={(event) => onCodeChange(event.target.value)}
         disabled={!method.isEditingRequest || method.isRequesting}
+        error={method.invalidPayload}
+        helperText={method.invalidPayload ? 'JSON is invalid' : null}
         fullWidth
       ></TextField>
-      <Show when={method.invalidPayload}>
-        <Box sx={{ mt: 1 }}>
-          <Alert severity="error">JSON is invalid</Alert>
-        </Box>
-      </Show>
-      <Show when={method.result}>
-        {(result) => (
-          <DocsMethodResponse
-            response={{
-              status: result.statusCode,
-              statusMessage: result.status,
-              example: JSON.stringify(result.data, null, 4),
-            }}
-          ></DocsMethodResponse>
-        )}
-      </Show>
-      <Show when={method.error}>
-        {(error) => (
-          <DocsMethodResponse
-            response={{
-              status: error.statusCode,
-              statusMessage: error.status,
-              example: JSON.stringify(error, null, 4),
-            }}
-          ></DocsMethodResponse>
-        )}
-      </Show>
       <Box sx={{ mt: 1 }}>
         <Show when={!method.isEditingRequest}>
           <Button variant="contained" onClick={onClickTryItOut}>
@@ -128,7 +112,7 @@ export function DocsMethodRequest({ method }) {
             <Button
               onClick={onExecute}
               variant="contained"
-              disabled={method.isRequesting}
+              disabled={method.isRequesting || method.invalidPayload}
             >
               Execute
             </Button>
@@ -138,6 +122,34 @@ export function DocsMethodRequest({ method }) {
           </Stack>
         </Show>
       </Box>
+      <Show when={method.result}>
+        {(result) => (
+          <Box sx={{ mt: 2 }}>
+            <Typography variant="h5">Response from request</Typography>
+            <DocsMethodResponse
+              response={{
+                status: result.statusCode,
+                statusMessage: result.status,
+                example: JSON.stringify(result.data, null, 4),
+              }}
+            ></DocsMethodResponse>
+          </Box>
+        )}
+      </Show>
+      <Show when={method.error}>
+        {(error) => (
+          <Box sx={{ mt: 2 }}>
+            <Typography variant="h5">Error from request</Typography>
+            <DocsMethodResponse
+              response={{
+                status: error.statusCode,
+                statusMessage: error.status,
+                example: JSON.stringify(error, null, 4),
+              }}
+            ></DocsMethodResponse>
+          </Box>
+        )}
+      </Show>
     </Box>
   );
 }

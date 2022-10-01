@@ -1,4 +1,5 @@
 import { ApiProperty } from '../../../api/api-property';
+import { MethodActionEnum } from '../method-action.enum';
 
 import { DocsResponseViewModel } from './docs-response.view-model';
 
@@ -20,4 +21,7 @@ export class DocsMethodViewModel {
 
   @ApiProperty({ type: () => DocsResponseViewModel, isArray: true })
   responses!: DocsResponseViewModel[];
+
+  @ApiProperty({ type: () => MethodActionEnum, isEnum: true })
+  action!: MethodActionEnum;
 }

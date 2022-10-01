@@ -8,6 +8,7 @@ import { fromModelToExample } from '../../api/from-model-to-example';
 import { ModuleResolver } from '../../api/module-resolver';
 import { Injectable } from '../../di/injectable';
 
+import { fromPathToMethodAction } from './from-path-to-method-action';
 import { DocsControllerViewModel } from './view-model/docs-controller.view-model';
 import { DocsMethodViewModel } from './view-model/docs-method.view-model';
 
@@ -38,6 +39,7 @@ export class DocsService {
         request: fromModelToExample(parameterMetadata?.type, {
           isArray: parameterMetadata?.isArray,
         }),
+        action: fromPathToMethodAction(methodMetadata.path),
       });
     }
     return {

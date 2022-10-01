@@ -29,7 +29,7 @@ export class DatabaseService {
   async getAll(dto: GetAllDto): Promise<DatabaseViewModel[]> {
     const where: Prisma.DatabaseWhereInput = {};
     if (isNotNil(dto.active)) {
-      where.inactiveAt = null;
+      where.inactiveAt = dto.active ? null : { not: null };
     }
     const databases = await this.databaseRepository.findMany({
       include: { _count: { select: { schedule: true } } },

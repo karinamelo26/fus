@@ -52,7 +52,11 @@ function normalizeSearch(str) {
   return normalizeString(str).toLowerCase().trim();
 }
 
-const searchFnsMethods = [(method) => method.path, (method) => method.description];
+const searchFnsMethods = [
+  (method) => method.path,
+  (method) => method.summary,
+  (method) => method.description,
+];
 
 export const DocsStateSelectors = {
   getControllers: selector({
