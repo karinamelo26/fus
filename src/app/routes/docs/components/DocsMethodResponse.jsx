@@ -27,6 +27,7 @@ export function DocsMethodResponse({ response }) {
       className={styles.response}
       sx={{
         backgroundImage: `linear-gradient(90deg, ${backgroundColor}${_1_PERCENT_HEX} 0%, ${backgroundColor}${_5_PERCENT_HEX} 100%)`,
+        border: `1px solid ${textColor}`,
       }}
     >
       <CardHeader
