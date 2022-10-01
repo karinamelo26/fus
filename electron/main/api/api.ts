@@ -14,7 +14,12 @@ import { AnyObject } from '../util/any-object.type';
 import { calculateAndFormatPerformanceTime } from '../util/format-performance-time';
 
 import { Controller, ControllerMetadata, MethodMetadata } from './controller';
-import { BadRequestException, Exception, InternalServerErrorException, NotFoundException } from './exception';
+import {
+  BadRequestException,
+  Exception,
+  InternalServerErrorException,
+  NotFoundException,
+} from './exception';
 import { ModuleResolver } from './module-resolver';
 import { Response } from './response';
 import { validateData } from './validate-data';
@@ -25,7 +30,10 @@ interface ParameterResolved {
 }
 
 export class Api {
-  private constructor(private readonly injector: Injector, private readonly moduleResolver: ModuleResolver) {}
+  private constructor(
+    private readonly injector: Injector,
+    private readonly moduleResolver: ModuleResolver
+  ) {}
 
   private readonly _logger = Logger.create(this);
   private readonly _paths: string[] = [];
@@ -37,8 +45,8 @@ export class Api {
   ): (event: IpcMainInvokeEvent, ...args: unknown[]) => Promise<void> | any {
     return async (_, ...args: unknown[]) => {
       try {
-        const parametersPromises: Promise<ParameterResolved>[] = methodMetadata.parameters.map(
-          async (metadata, index) => {
+        const parametersPromises: Promise<ParameterResolved>[] =
+          methodMetadata.parameters.map(async (metadata, index) => {
             const arg = args[index];
             if (!metadata) {
               return { data: arg };
@@ -47,16 +55,21 @@ export class Api {
               return { data: null, errors: [`Parameter at index ${index} is required`] };
             }
             if (metadata.isArray && !isArray(arg)) {
-              return { data: null, errors: [`Parameter at index ${index} must be an Array`] };
+              return {
+                data: null,
+                errors: [`Parameter at index ${index} must be an Array`],
+              };
             }
             if (!isObject(arg) || !metadata.type) {
               return { data: arg };
             }
-            const paramInstance: AnyObject | AnyObject[] = plainToInstance(metadata.type, arg);
+            const paramInstance: AnyObject | AnyObject[] = plainToInstance(
+              metadata.type,
+              arg
+            );
             const errors = await validateData(paramInstance);
             return { data: errors.length ? null : paramInstance, errors };
-          }
-        );
+          });
         const parameters = await Promise.all(parametersPromises);
         const errors = parameters.filter((parameter) => parameter.errors?.length);
         if (errors.length) {
@@ -75,7 +88,9 @@ export class Api {
         } else if (error instanceof Prisma.NotFoundError) {
           return new NotFoundException(error.message);
         }
-        return new InternalServerErrorException(error?.message ?? error?.error ?? 'Unknown error');
+        return new InternalServerErrorException(
+          error?.message ?? error?.error ?? 'Unknown error'
+        );
       }
     };
   }
@@ -88,7 +103,10 @@ export class Api {
       this._paths.push(path);
       ipcMain.handle(path, this._createHandler(path, instance, methodMetadata));
       const endMs = performance.now();
-      this._logger.log(`[${path}] Initialized`, ...calculateAndFormatPerformanceTime(startMs, endMs));
+      this._logger.log(
+        `[${path}] Initialized`,
+        ...calculateAndFormatPerformanceTime(startMs, endMs)
+      );
     }
   }
 
@@ -119,7 +137,10 @@ export class Api {
     await this.moduleResolver.resolveAll();
     const controllers = this.moduleResolver.getControllers();
     await this._initControllers(controllers);
-    this._logger.log('API Initialized', ...calculateAndFormatPerformanceTime(startMs, performance.now()));
+    this._logger.log(
+      'API Initialized',
+      ...calculateAndFormatPerformanceTime(startMs, performance.now())
+    );
     return this;
   }
 
