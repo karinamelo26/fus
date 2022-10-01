@@ -1,4 +1,12 @@
-import { Box, Button, Divider, Stack, TextField, Typography } from '@mui/material';
+import {
+  Box,
+  Button,
+  Divider,
+  Stack,
+  TextField,
+  Tooltip,
+  Typography,
+} from '@mui/material';
 import { useDocsState } from '../docs.state';
 import { Show } from '../../../components/Show';
 import { isArray, isDate, isObject } from 'st-utils';
@@ -21,6 +29,7 @@ export function DocsMethodRequest({ method }) {
     update({
       isEditingRequest: false,
       requestEditable: method.request,
+      lastRequestEditable: null,
       result: null,
       error: null,
     });
@@ -76,12 +85,30 @@ export function DocsMethodRequest({ method }) {
     update({ isRequesting: true });
     try {
       const result = await api(method.path, json);
-      update({ result, error: null });
+      update({ result, error: null, lastRequestEditable: method.requestEditable });
     } catch (error) {
       update({ error, result: null });
     } finally {
       update({ isRequesting: false });
     }
+  }
+
+  function getHelperText() {
+    if (method.invalidPayload) {
+      return 'JSON is invalid';
+    }
+    return null;
+  }
+
+  function isSamePayload() {
+    return method.lastRequestEditable === method.requestEditable;
+  }
+
+  function getButtonTooltip() {
+    if (method.lastRequestEditable === method.requestEditable) {
+      return 'Same payload as before. Will not be executed';
+    }
+    return null;
   }
 
   return (
@@ -98,7 +125,7 @@ export function DocsMethodRequest({ method }) {
         onChange={(event) => onCodeChange(event.target.value)}
         disabled={!method.isEditingRequest || method.isRequesting}
         error={method.invalidPayload}
-        helperText={method.invalidPayload ? 'JSON is invalid' : null}
+        helperText={getHelperText()}
         fullWidth
       ></TextField>
       <Box sx={{ mt: 1 }}>
@@ -109,13 +136,19 @@ export function DocsMethodRequest({ method }) {
         </Show>
         <Show when={method.isEditingRequest}>
           <Stack spacing={1} direction="row">
-            <Button
-              onClick={onExecute}
-              variant="contained"
-              disabled={method.isRequesting || method.invalidPayload}
-            >
-              Execute
-            </Button>
+            <Tooltip title={getButtonTooltip()}>
+              <span>
+                <Button
+                  onClick={onExecute}
+                  variant="contained"
+                  disabled={
+                    method.isRequesting || method.invalidPayload || isSamePayload()
+                  }
+                >
+                  Execute
+                </Button>
+              </span>
+            </Tooltip>
             <Button onClick={onReset} disabled={method.isRequesting}>
               Reset
             </Button>
@@ -127,6 +160,7 @@ export function DocsMethodRequest({ method }) {
           <Box sx={{ mt: 2 }}>
             <Typography variant="h5">Response from request</Typography>
             <DocsMethodResponse
+              animated
               response={{
                 status: result.statusCode,
                 statusMessage: result.status,
@@ -141,6 +175,7 @@ export function DocsMethodRequest({ method }) {
           <Box sx={{ mt: 2 }}>
             <Typography variant="h5">Error from request</Typography>
             <DocsMethodResponse
+              animated
               response={{
                 status: error.statusCode,
                 statusMessage: error.status,

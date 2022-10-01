@@ -2,11 +2,16 @@ import { mkdir } from 'fs/promises';
 import { homedir } from 'os';
 import { join } from 'path';
 
+import { app } from 'electron';
+
 import { Injectable } from '../../di/injectable';
 import { pathExists } from '../../util/path-exists';
 
 @Injectable()
 export class ConfigService {
+  readonly distPath = devMode
+    ? join(process.cwd(), 'dist')
+    : join(app.getAppPath(), 'dist');
   readonly fusPath = join(homedir(), '.fus');
   readonly homePath = this._getHomePath();
   readonly databasePath = join(this.homePath, 'database', 'data.sqlite');

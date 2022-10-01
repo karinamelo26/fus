@@ -8,10 +8,12 @@ export function DocsController({ controller }) {
   const { updateController } = useDocsState();
 
   return (
-    <Accordion expanded={!controller.collapsed}>
+    <Accordion expanded={!controller.collapsed} TransitionProps={{ unmountOnExit: true }}>
       <AccordionSummary
         expandIcon={<ExpandMore></ExpandMore>}
-        onClick={() => updateController(controller.path, { collapsed: !controller.collapsed })}
+        onClick={() =>
+          updateController(controller.path, { collapsed: !controller.collapsed })
+        }
       >
         <Typography variant="h6">
           {controller.name}

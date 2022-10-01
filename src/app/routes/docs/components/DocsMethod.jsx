@@ -38,6 +38,7 @@ export function DocsMethod({ method }) {
         backgroundImage: `linear-gradient(90deg, ${colorHex}${_5_PERCENT_HEX} 0%, ${colorHex}${_1_PERCENT_HEX} 100%)`,
         border: `1px solid ${colorHex}`,
       }}
+      TransitionProps={{ unmountOnExit: true }}
     >
       <AccordionSummary
         expandIcon={<ExpandMore></ExpandMore>}

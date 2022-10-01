@@ -1,30 +1,21 @@
 import { Card, CardContent, CardHeader, Typography, useTheme } from '@mui/material';
-import { useMemo } from 'react';
 import { percentToHex } from '../../shared/utils/percent-to-hex';
 import styles from './DocsMethodResponse.module.scss';
+import classnames from 'classnames';
 
 const _5_PERCENT_HEX = percentToHex(5);
 const _1_PERCENT_HEX = percentToHex(0.5);
 
-export function DocsMethodResponse({ response }) {
+export function DocsMethodResponse({ response, animated = false }) {
   const theme = useTheme();
-  const [textColor, backgroundColor] = useMemo(
-    () =>
-      response.status >= 400
-        ? [theme.palette.error.dark, theme.palette.error.light]
-        : [theme.palette.success.main, theme.palette.success.light],
-    [
-      response.status,
-      theme.palette.error.dark,
-      theme.palette.error.light,
-      theme.palette.success.main,
-      theme.palette.success.light,
-    ]
-  );
+  const [textColor, backgroundColor] =
+    response.status >= 400
+      ? [theme.palette.error.dark, theme.palette.error.light]
+      : [theme.palette.success.main, theme.palette.success.light];
 
   return (
     <Card
-      className={styles.response}
+      className={classnames({ [styles.responseAnimated]: animated })}
       sx={{
         backgroundImage: `linear-gradient(90deg, ${backgroundColor}${_1_PERCENT_HEX} 0%, ${backgroundColor}${_5_PERCENT_HEX} 100%)`,
         border: `1px solid ${textColor}`,
