@@ -100,8 +100,6 @@ window.onmessage = (ev) => {
   }
 };
 
-setTimeout(removeLoading, 4999);
-
 let apiReadyPromiseResolve: () => void;
 const apiReadyPromise = new Promise<void>((resolve) => {
   apiReadyPromiseResolve = resolve;

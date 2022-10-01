@@ -78,7 +78,7 @@ function build(): PluginOption {
       const packageJson: PackageJson & Record<string, unknown> =
         JSON.parse(packageJsonFile);
       // Prisma is not customized in production code
-      packageJson.prisma = undefined;
+      (packageJson as any).prisma = undefined;
       // Assertion here because we certainly have scripts in our package.json
       packageJson.scripts!.postinstall = undefined;
       // We don't need devDependencies in production

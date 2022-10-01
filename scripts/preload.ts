@@ -44,7 +44,9 @@ function serve(): PluginOption {
           ...config,
           build: {
             ...config.build,
-            watch: {},
+            watch: {
+              include: ['electron/preload/**/*'],
+            },
           },
           plugins: [
             ...(config.plugins ?? []),
