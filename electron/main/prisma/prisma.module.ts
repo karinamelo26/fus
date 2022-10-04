@@ -25,7 +25,11 @@ import { formatPerformanceTime } from '../util/format-performance-time';
         if (devMode) {
           const logger = Logger.create(PrismaClient);
           prismaClient.$on('query', (event) => {
-            logger.log(`Query: ${event.query}\nParams:`, event.params, ...formatPerformanceTime(event.duration));
+            logger.log(
+              `Query: ${event.query}\nParams:`,
+              event.params,
+              ...formatPerformanceTime(event.duration)
+            );
           });
           prismaClient.$on('error', (event) => {
             logger.error(event.message);

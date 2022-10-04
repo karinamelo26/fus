@@ -1,8 +1,11 @@
 import { round } from 'st-utils';
 
-import { ConsoleColor } from '../logger/logger';
+import { ConsoleColor } from '../logger/console';
 
-export function calculateAndFormatPerformanceTime(startMs: number, endMs: number): string[] {
+export function calculateAndFormatPerformanceTime(
+  startMs: number,
+  endMs: number
+): string[] {
   const time = endMs - startMs;
   return formatPerformanceTime(time);
 }

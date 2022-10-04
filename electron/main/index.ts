@@ -10,6 +10,8 @@ app
   .then(() => Application.create())
   .catch((error) => {
     if (devMode) {
+      // eslint-disable-next-line no-console
+      console.error(error);
       throw error;
     }
     // TODO CHECK later

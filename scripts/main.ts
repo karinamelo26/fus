@@ -55,7 +55,7 @@ function getEsbuildConfig(production = false): BuildOptions {
 }
 
 function build(): PluginOption {
-  const logger = Logger.create('Main build');
+  const logger = Logger.create('Main build', { ignorePersistence: true });
   let config: ResolvedConfig | undefined;
   return {
     name: 'vite-plugin-electron-main-build',
@@ -116,7 +116,7 @@ function serve(): PluginOption {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const electronPath = require('electron') as unknown as string;
   let electronApp: ChildProcess | undefined;
-  const logger = Logger.create('Main serve');
+  const logger = Logger.create('Main serve', { ignorePersistence: true });
   return {
     name: 'vite-plugin-electron-main-serve',
     apply: 'serve',

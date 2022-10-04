@@ -21,10 +21,12 @@ const FILES_TO_COPY = [
 ] as const;
 const DESTINATION = join(DIST_ELECTRON_PATH, 'main');
 
-const logger = Logger.create('Prisma Binaries');
+const logger = Logger.create('Prisma Binaries', { ignorePersistence: true });
 
 async function getPrismaEnginesVersion(): Promise<string> {
-  const packageJsonFile = await readFile(join(process.cwd(), 'package.json'), { encoding: 'utf-8' });
+  const packageJsonFile = await readFile(join(process.cwd(), 'package.json'), {
+    encoding: 'utf-8',
+  });
   const packageJson: PackageJson = JSON.parse(packageJsonFile);
   return packageJson.devDependencies![PACKAGE_NAME]!.replace(/[\^~]/, '');
 }

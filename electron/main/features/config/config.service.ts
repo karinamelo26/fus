@@ -16,6 +16,7 @@ export class ConfigService {
   readonly homePath = this._getHomePath();
   readonly databasePath = join(this.homePath, 'database', 'data.sqlite');
   readonly temporaryFilesPath = join(this.homePath, 'temporary_files');
+  readonly logPath = join(this.homePath, 'log');
 
   private _getHomePath(): string {
     const paths = [this.fusPath];
@@ -25,8 +26,10 @@ export class ConfigService {
     return join(...paths);
   }
 
+  static readonly instance = new ConfigService();
+
   static async init(): Promise<ConfigService> {
-    const config = ConfigService.create();
+    const config = this.instance;
     const fusFolderExists = await pathExists(config.fusPath);
     if (!fusFolderExists) {
       await mkdir(config.fusPath);
@@ -41,10 +44,10 @@ export class ConfigService {
     if (!temporaryFilesPathExists) {
       await mkdir(config.temporaryFilesPath);
     }
+    const logPathExists = await pathExists(config.logPath);
+    if (!logPathExists) {
+      await mkdir(config.logPath);
+    }
     return config;
-  }
-
-  static create(): ConfigService {
-    return new ConfigService();
   }
 }

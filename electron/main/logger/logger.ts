@@ -1,57 +1,67 @@
-import { isFunction, isObject, isString } from 'st-utils';
+import {
+  isFunction,
+  isObject,
+  isString,
+  isNumber,
+  isArray,
+  isDate,
+  isRegExp,
+  isSymbol,
+  isBoolean,
+  isNil,
+  noop,
+} from 'st-utils';
 
 import { isClass } from '../util/util';
 
-type ConsoleMethod = 'log' | 'warn' | 'error';
-const methods = ['log', 'warn', 'error'] as const;
+import {
+  ConsoleColor,
+  ConsoleLevelColor,
+  consoleLogFactory,
+  CONSOLE_METHODS,
+} from './console';
+import type { LoggerFile } from './logger-file';
 
-function consoleLogFactory<K extends ConsoleMethod>(method: K): typeof console[K] {
-  // eslint-disable-next-line no-console
-  return (...args: any[]) => console[method](`[${new Date().toLocaleString('pt-BR')}]`, ...args);
+export enum LoggerLevel {
+  log,
+  warn,
+  error,
 }
 
-export enum ConsoleColor {
-  Reset = '\x1b[0m',
-  Bright = '\x1b[1m',
-  Dim = '\x1b[2m',
-  Underscore = '\x1b[4m',
-  Blink = '\x1b[5m',
-  Reverse = '\x1b[7m',
-  Hidden = '\x1b[8m',
-  FgBlack = '\x1b[30m',
-  FgRed = '\x1b[31m',
-  FgGreen = '\x1b[32m',
-  FgYellow = '\x1b[33m',
-  FgBlue = '\x1b[34m',
-  FgMagenta = '\x1b[35m',
-  FgCyan = '\x1b[36m',
-  FgWhite = '\x1b[37m',
-  BgBlack = '\x1b[40m',
-  BgRed = '\x1b[41m',
-  BgGreen = '\x1b[42m',
-  BgYellow = '\x1b[43m',
-  BgBlue = '\x1b[44m',
-  BgMagenta = '\x1b[45m',
-  BgCyan = '\x1b[46m',
-  BgWhite = '\x1b[47m',
-}
-
-enum ConsoleLevelColor {
-  error = ConsoleColor.FgRed,
-  warn = ConsoleColor.FgYellow,
-  log = ConsoleColor.FgWhite,
+interface LoggerV2Options {
+  ignorePersistence?: boolean;
 }
 
 export class Logger {
-  private constructor(private readonly prefix?: string) {
-    for (const method of methods) {
+  private constructor(private readonly prefix?: string, options: LoggerV2Options = {}) {
+    // Logger is used on the build process, so we need to check if devMode is defined
+    const level =
+      typeof devMode === 'undefined' || !devMode ? LoggerLevel.error : LoggerLevel.log;
+    if (!options.ignorePersistence) {
+      Logger._preloadLoggerV2File();
+    }
+    for (const method of CONSOLE_METHODS) {
+      const methodLevel = LoggerLevel[method];
+      if (level > methodLevel) {
+        this[method] = noop;
+        continue;
+      }
       this[method] = (...args: any[]) => {
         const prefixArgs = [`[${new Date().toLocaleString('pt-BR')}]`];
         if (this.prefix) {
           prefixArgs.push(ConsoleColor.FgMagenta, this.prefix, ConsoleColor.Reset);
         }
+        const finalArgs = [
+          ...prefixArgs,
+          ConsoleLevelColor[method],
+          ...args,
+          ConsoleColor.Reset,
+        ];
+        if (!options.ignorePersistence) {
+          Logger._persist(finalArgs);
+        }
         // eslint-disable-next-line no-console
-        return console[method](...prefixArgs, ConsoleLevelColor[method], ...args, ConsoleColor.Reset);
+        return console[method](...finalArgs);
       };
     }
   }
@@ -60,11 +70,53 @@ export class Logger {
   warn!: typeof console.warn;
   error!: typeof console.error;
 
+  private static _loggerV2File: LoggerFile | null = null;
+
   static log = consoleLogFactory('log');
   static warn = consoleLogFactory('warn');
   static error = consoleLogFactory('error');
 
-  static create(prefix: any): Logger {
+  private static async _preloadLoggerV2File(): Promise<void> {
+    if (this._loggerV2File) {
+      return;
+    }
+    this._loggerV2File = await this._getLoggerV2File();
+  }
+
+  private static async _getLoggerV2File(): Promise<LoggerFile> {
+    if (!this._loggerV2File) {
+      const { loggerV2File } = await import('./logger-file');
+      this._loggerV2File = loggerV2File;
+    }
+    return this._loggerV2File;
+  }
+
+  private static async _persist(args: any[]): Promise<void> {
+    const content = args
+      .reduce((acc: string, item) => {
+        if (isString(item)) {
+          acc += item;
+        } else if (isNumber(item) || isSymbol(item) || isBoolean(item) || isNil(item)) {
+          acc += String(item);
+        } else if (isDate(item)) {
+          acc += item.toISOString();
+        } else if (isRegExp(item)) {
+          acc += `/${item.source}/${String(item.flags)}`;
+        } else if (isArray(item) || isObject(item)) {
+          acc += JSON.stringify(item, null, 4);
+        }
+        return acc;
+      }, '')
+      .replace(
+        // eslint-disable-next-line no-control-regex -- remove all colors from log messages
+        /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g,
+        ' '
+      );
+    const loggerV2File = await this._getLoggerV2File();
+    loggerV2File.enqueue(content);
+  }
+
+  static create(prefix: any, options?: LoggerV2Options): Logger {
     let name: string | undefined;
     if (isString(prefix)) {
       name = prefix;
@@ -75,6 +127,6 @@ export class Logger {
     } else if (isFunction(prefix)) {
       return this.create(prefix());
     }
-    return new Logger(name);
+    return new Logger(name, options);
   }
 }

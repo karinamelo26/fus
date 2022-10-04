@@ -29,7 +29,11 @@ import { queryErrorEnumToQueryHistoryCodeEnum } from './query-error-enum-to-quer
 import { SchedulerError } from './scheduler-error';
 
 export class Scheduler {
-  constructor(injector: Injector, schedule: Schedule, private readonly databaseDriver: DatabaseDriver) {
+  constructor(
+    injector: Injector,
+    schedule: Schedule,
+    private readonly databaseDriver: DatabaseDriver
+  ) {
     this._cachedSchedule = schedule;
     this._idSchedule = schedule.id;
     this._queryHistoryService = injector.get(QueryHistoryService);
@@ -38,7 +42,9 @@ export class Scheduler {
     this._configService = injector.get(ConfigService);
     this._logger = Logger.create(`Scheduler [${this._idSchedule}]`);
     const cronTime = getCronTime(schedule);
-    this._cron = new CronJob(cronTime, () => this.execute(QueryHistoryModeEnum.Scheduled));
+    this._cron = new CronJob(cronTime, () =>
+      this.execute(QueryHistoryModeEnum.Scheduled)
+    );
   }
 
   private readonly _idSchedule: string;
@@ -76,7 +82,9 @@ export class Scheduler {
 
   private async _getFilePath(): Promise<string> {
     const schedule = await this._getSchedule();
-    return schedule.temporaryFilename ? this._getTemporaryFilePath(schedule.temporaryFilename) : schedule.filePath;
+    return schedule.temporaryFilename
+      ? this._getTemporaryFilePath(schedule.temporaryFilename)
+      : schedule.filePath;
   }
 
   private async _createTemporaryFile(): Promise<string> {
@@ -132,7 +140,9 @@ export class Scheduler {
     }
     if (!isFileLocked) {
       if (temporaryFilename) {
-        this._logger.log('File is not locked, deleting temporary file and updating database to null');
+        this._logger.log(
+          'File is not locked, deleting temporary file and updating database to null'
+        );
         await Promise.all([
           rm(this._getTemporaryFilePath(temporaryFilename)),
           this._scheduleService.updateTemporaryFilename(id, null),
@@ -217,10 +227,16 @@ export class Scheduler {
     if (canConnect) {
       return;
     }
-    throw new SchedulerError(QueryHistoryCodeEnum.DatabaseNotAvailable, 'Could not connect to the database');
+    throw new SchedulerError(
+      QueryHistoryCodeEnum.DatabaseNotAvailable,
+      'Could not connect to the database'
+    );
   }
 
-  private async _handleKnownError(error: SchedulerError, mode: QueryHistoryModeEnum): Promise<void> {
+  private async _handleKnownError(
+    error: SchedulerError,
+    mode: QueryHistoryModeEnum
+  ): Promise<void> {
     this._logger.error('Failed: ', error.message);
     this._failedAttempts++;
     const filePath = await this._getFilePath();
@@ -229,7 +245,8 @@ export class Scheduler {
       // If it is, try to unlock it
       await unlock(filePath);
     }
-    const { id, query, name, failedAttemptsBeforeInactivation } = await this._getSchedule();
+    const { id, query, name, failedAttemptsBeforeInactivation } =
+      await this._getSchedule();
     await this._queryHistoryService.add({
       idSchedule: id,
       query,
@@ -240,8 +257,12 @@ export class Scheduler {
     });
     let bodyNotification = 'Please check the schedule page to view the error';
     if (error.code === QueryHistoryCodeEnum.FileNotFound) {
-      bodyNotification += '\nThis schedule is being inactivated because the file was not found';
-      await this._scheduleService.inactivate(this._idSchedule, ScheduleInactiveCodeEnum.FileNotFound);
+      bodyNotification +=
+        '\nThis schedule is being inactivated because the file was not found';
+      await this._scheduleService.inactivate(
+        this._idSchedule,
+        ScheduleInactiveCodeEnum.FileNotFound
+      );
     }
     const isSqlRelatedError = new Set([
       QueryHistoryCodeEnum.QueryError,
@@ -253,8 +274,12 @@ export class Scheduler {
       isNotNil(failedAttemptsBeforeInactivation) &&
       this._failedAttempts >= failedAttemptsBeforeInactivation
     ) {
-      bodyNotification += '\nThis schedule is being inactivated because is exceeded the maximum failed attempts';
-      await this._scheduleService.inactivate(this._idSchedule, ScheduleInactiveCodeEnum.QueryExecutionError);
+      bodyNotification +=
+        '\nThis schedule is being inactivated because is exceeded the maximum failed attempts';
+      await this._scheduleService.inactivate(
+        this._idSchedule,
+        ScheduleInactiveCodeEnum.QueryExecutionError
+      );
     }
     this._notificationService.show({
       title: `${name} failed to execute`,
@@ -268,7 +293,10 @@ export class Scheduler {
         return await this._handleKnownError(error, mode);
       }
       return await this._handleKnownError(
-        new SchedulerError(QueryHistoryCodeEnum.Unknown, `Unknown error: ${error.message}`),
+        new SchedulerError(
+          QueryHistoryCodeEnum.Unknown,
+          `Unknown error: ${error.message}`
+        ),
         mode
       );
     } catch (criticalError) {
@@ -312,7 +340,10 @@ export class Scheduler {
         mode,
       });
       this._failedAttempts = 0;
-      this._logger.log('Finished', ...calculateAndFormatPerformanceTime(startMs, performance.now()));
+      this._logger.log(
+        'Finished',
+        ...calculateAndFormatPerformanceTime(startMs, performance.now())
+      );
     } catch (error) {
       await this._handleError(error, mode);
     }
